@@ -26,6 +26,23 @@ Estos archivos son la fuente funcional del proyecto.
 - No crear dependencias innecesarias.
 - Mantener arquitectura limpia y codigo mantenible.
 
+# Diseño UI/UX
+
+Antes de generar pantallas, componentes o layouts,
+Codex debe revisar:
+
+- docs/design/ui-ux-design-system.md
+
+La aplicación debe seguir estrictamente:
+
+- estética premium
+- colores pastel
+- componentes redondeados
+- sombras suaves
+- mucho espacio visual
+- estilo iOS moderno
+- diseño tipo startup premium
+
 ## Agentes disponibles
 
 - Product Manager Agent: [docs/agents/product-manager.md](docs/agents/product-manager.md)
