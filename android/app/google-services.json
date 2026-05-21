@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "68837437433",
+    "project_id": "pets-app-84543",
+    "storage_bucket": "pets-app-84543.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:68837437433:android:1b4b9ed5b4bfbf1c811728",
+        "android_client_info": {
+          "package_name": "com.jzamoradev.pets_app_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "68837437433-edp4q100ofbv5q686sa2hgkc2g4hss01.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jzamoradev.pets_app_mobile",
+            "certificate_hash": "b44b1cc7e6767a236fe1acf9870d999ee8d97f16"
+          }
+        },
+        {
+          "client_id": "68837437433-qd5n2abfr8r9mc6onopl6oqcodka750u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD06Nv_bWTVpgQFsTxRUl8Os-Z9Hgl1z_A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "68837437433-qd5n2abfr8r9mc6onopl6oqcodka750u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "68837437433-di5l5nafvclclv25gn07l5f6sicv8u6g.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jzamoradev.petsAppMobile"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

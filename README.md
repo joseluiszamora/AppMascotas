@@ -1,16 +1,29 @@
-# app_mascotas
+# App Mascotas
 
-A new Flutter project.
+Plataforma comunitaria en Flutter para reportar y encontrar mascotas perdidas.
 
-## Getting Started
+## Ejecutar en desarrollo
 
-This project is a starting point for a Flutter application.
+La app usa variables de entorno de Dart para inicializar Supabase. Crea un
+archivo `.env` en la raiz del proyecto con:
 
-A few resources to get you started if this is your first Flutter project:
+```env
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_ANON_KEY=tu_anon_key
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Ejecuta la app pasando ese archivo a Flutter:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run --dart-define-from-file=.env
+```
+
+Si corres desde Android Studio o IntelliJ, agrega este argumento en la
+configuracion de ejecucion:
+
+```text
+--dart-define-from-file=.env
+```
+
+Sin esas variables, el selector de Google puede abrirse, pero Supabase no puede
+completar el inicio de sesion.
