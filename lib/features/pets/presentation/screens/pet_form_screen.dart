@@ -5,6 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_image_cropper.dart';
+import '../../../../core/widgets/photo_picker_action_tile.dart';
+import '../../../../core/widgets/photo_selection_thumbnail.dart';
 import '../../../auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../../auth/presentation/blocs/auth/auth_state.dart';
 import '../../domain/entities/pet_entity.dart';
@@ -121,12 +124,20 @@ class _PetFormScreenState extends State<PetFormScreen> {
       imageQuality: 80,
       maxWidth: 1200,
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
+
+    final cropped = await AppImageCropper.cropSquareImage(
+      sourcePath: picked.path,
+      title: 'Recortar foto de mascota',
+      compressQuality: 90,
+    );
+    if (cropped == null || !mounted) return;
+
     if (_isEditing) {
       // Subir inmediatamente en modo edición
-      await _uploadPhotoToExisting(File(picked.path));
+      await _uploadPhotoToExisting(cropped);
     } else {
-      setState(() => _pendingPhotos.add(File(picked.path)));
+      setState(() => _pendingPhotos.add(cropped));
     }
   }
 
@@ -445,47 +456,19 @@ class _PetFormScreenState extends State<PetFormScreen> {
               ...existingPhotos.map(
                 (photo) => Padding(
                   padding: const EdgeInsets.only(right: 10),
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.network(
-                          photo.url,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, error, stackTrace) => Container(
-                            width: 100,
-                            height: 100,
-                            color: AppColors.border,
-                            child: const Icon(
-                              Icons.broken_image_rounded,
-                              color: AppColors.textHint,
-                            ),
-                          ),
+                  child: PhotoSelectionThumbnail(
+                    onRemove: () => _removeExistingPhoto(photo),
+                    child: Image.network(
+                      photo.url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, error, stackTrace) => Container(
+                        color: AppColors.border,
+                        child: const Icon(
+                          Icons.broken_image_rounded,
+                          color: AppColors.textHint,
                         ),
                       ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () => _removeExistingPhoto(photo),
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withAlpha(160),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close_rounded,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -493,84 +476,17 @@ class _PetFormScreenState extends State<PetFormScreen> {
               ..._pendingPhotos.map(
                 (file) => Padding(
                   padding: const EdgeInsets.only(right: 10),
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          file,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _pendingPhotos.remove(file)),
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withAlpha(160),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close_rounded,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: PhotoSelectionThumbnail(
+                    onRemove: () => setState(() => _pendingPhotos.remove(file)),
+                    child: Image.file(file, fit: BoxFit.cover),
                   ),
                 ),
               ),
-              // Botón agregar foto
-              GestureDetector(
+              PhotoPickerActionTile(
                 onTap: _pickImage,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: hasPhotos
-                        ? AppColors.surface
-                        : AppColors.pastelYellow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: hasPhotos
-                          ? AppColors.border
-                          : AppColors.primary.withAlpha(80),
-                      width: hasPhotos ? 1 : 2,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_a_photo_rounded,
-                        color: hasPhotos
-                            ? AppColors.textHint
-                            : AppColors.primary,
-                        size: 28,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Agregar',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: hasPhotos
-                              ? AppColors.textHint
-                              : AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                accentColor: AppColors.primary,
+                highlighted: !hasPhotos,
+                hasPhotos: hasPhotos,
               ),
             ],
           ),

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/service_locator.dart';
 import '../../domain/entities/report_entity.dart';
 import '../../domain/usecases/get_report_by_id.dart';
+import '../utils/report_actions.dart';
 
 class ReportDetailScreen extends StatefulWidget {
   const ReportDetailScreen({required this.reportId, super.key});
@@ -32,43 +31,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     });
   }
 
-  Future<void> _shareReport(ReportEntity report) async {
-    try {
-      final title = report.type == ReportType.lost
-          ? (report.petName ?? 'Mascota perdida')
-          : _foundTitle(report);
-      final dateLabel = DateFormat('d MMM y, HH:mm', 'es').format(report.occurredAt);
-      final location = report.locationDescription ?? 'Ubicación aproximada registrada';
-      final description = _descriptionText(report);
-      final shareText = StringBuffer()
-        ..writeln('Reporte de ${AppConstants.appName}')
-        ..writeln()
-        ..writeln(title)
-        ..writeln('Tipo: ${report.type == ReportType.lost ? 'Mascota perdida' : 'Mascota encontrada'}')
-        ..writeln('Estado: ${_statusLabel(report.status)}')
-        ..writeln('Ubicación aproximada: $location')
-        ..writeln('Fecha: $dateLabel')
-        ..writeln()
-        ..writeln(description)
-        ..writeln()
-        ..writeln('ID del reporte: ${report.id}');
-
-      await Share.share(
-        shareText.toString(),
-        subject: title,
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No pudimos abrir las opciones para compartir.'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,7 +53,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             builder: (context, snapshot) {
               final report = snapshot.data;
               return IconButton(
-                onPressed: report == null ? null : () => _shareReport(report),
+                onPressed: report == null ? null : () => shareReport(context, report),
                 tooltip: 'Compartir reporte',
                 icon: const Icon(Icons.share_rounded),
                 color: AppColors.textPrimary,
@@ -134,9 +96,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           final isLost = report.type == ReportType.lost;
           final badgeColor = isLost ? AppColors.lostPet : AppColors.foundPet;
           final badgeBg = isLost ? AppColors.pastelPink : AppColors.pastelGreen;
-          final title = isLost
-              ? (report.petName ?? 'Mascota perdida')
-              : _foundTitle(report);
+            final title = reportTitle(report);
           final dateLabel = DateFormat('d MMM y, HH:mm', 'es').format(report.occurredAt);
 
           return SafeArea(
@@ -168,7 +128,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                       textColor: badgeColor,
                     ),
                     _Badge(
-                      label: _statusLabel(report.status),
+                      label: reportStatusLabel(report.status),
                       bgColor: AppColors.surface,
                       textColor: AppColors.textSecondary,
                     ),
@@ -195,33 +155,66 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: () => _shareReport(report),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    side: const BorderSide(color: AppColors.border),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 14,
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => openReportNavigation(context, report),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        icon: const Icon(Icons.navigation_rounded),
+                        label: const Text(
+                          'Navegar',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => shareReport(context, report),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textPrimary,
+                          side: const BorderSide(color: AppColors.border),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          backgroundColor: AppColors.surface,
+                        ),
+                        icon: const Icon(Icons.share_rounded),
+                        label: const Text(
+                          'Compartir',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
                     ),
-                    backgroundColor: AppColors.surface,
-                  ),
-                  icon: const Icon(Icons.share_rounded),
-                  label: const Text(
-                    'Compartir reporte',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 _InfoCard(
                   children: [
                     _InfoRow(
                       icon: Icons.location_on_outlined,
-                      label: 'Ubicación',
-                      value: report.locationDescription ?? 'Ubicación aproximada registrada',
+                      label: 'Ubicación aproximada',
+                      value: reportLocationLabel(report),
+                    ),
+                    _InfoRow(
+                      icon: Icons.pin_drop_outlined,
+                      label: 'Punto aproximado',
+                      value: reportApproximateCoordinatesLabel(report),
                     ),
                     _InfoRow(
                       icon: Icons.schedule_rounded,
@@ -253,7 +246,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                   title: 'Descripción',
                   children: [
                     Text(
-                      _descriptionText(report),
+                      reportDescriptionText(report),
                       style: const TextStyle(
                         fontSize: 14,
                         height: 1.45,
@@ -461,42 +454,6 @@ class _InfoRow extends StatelessWidget {
       ),
     );
   }
-}
-
-String _statusLabel(ReportStatus status) => switch (status) {
-  ReportStatus.underReview => 'En revisión',
-  ReportStatus.resolved => 'Resuelto',
-  ReportStatus.closed => 'Cerrado',
-  ReportStatus.reported => 'Reportado',
-  ReportStatus.active => 'Activo',
-};
-
-String _descriptionText(ReportEntity report) {
-  final primary = report.description?.trim();
-  if (primary != null && primary.isNotEmpty) {
-    return primary;
-  }
-
-  final fallback = report.foundPetDescription?.trim();
-  if (fallback != null && fallback.isNotEmpty) {
-    return fallback;
-  }
-
-  return 'Sin descripción adicional por ahora.';
-}
-
-String _foundTitle(ReportEntity report) {
-  final typeLabel = switch (report.foundPetType) {
-    ReportPetType.cat => 'Gato encontrado',
-    ReportPetType.other => 'Mascota encontrada',
-    _ => 'Perro encontrado',
-  };
-
-  if (report.foundPetColor != null && report.foundPetColor!.trim().isNotEmpty) {
-    return '$typeLabel · ${report.foundPetColor!}';
-  }
-
-  return typeLabel;
 }
 
 String _petTypeLabel(ReportPetType type) => switch (type) {

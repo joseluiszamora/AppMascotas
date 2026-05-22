@@ -31,6 +31,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
+  int _mapRefreshKey = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -48,13 +49,18 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   _HomeTab(user: user),
                   const PetsPage(),
-                  const ReportsMapPage(),
+                  ReportsMapPage(refreshToken: _mapRefreshKey),
                   _ProfileTab(user: user, isAuthLoading: isLoading),
                 ],
               ),
               bottomNavigationBar: _BottomNav(
                 currentIndex: _currentIndex,
-                onTap: (i) => setState(() => _currentIndex = i),
+                onTap: (i) => setState(() {
+                  _currentIndex = i;
+                  if (i == 2) {
+                    _mapRefreshKey++;
+                  }
+                }),
               ),
             ),
             if (isLoading)

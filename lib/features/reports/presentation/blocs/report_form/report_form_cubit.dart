@@ -62,6 +62,7 @@ class ReportFormCubit extends Cubit<ReportFormState> {
     required DateTime occurredAt,
     String? description,
     required bool showContact,
+    List<File> photos = const [],
   }) async {
     emit(
       state.copyWith(
@@ -81,6 +82,7 @@ class ReportFormCubit extends Cubit<ReportFormState> {
         occurredAt: occurredAt,
         description: description,
         showContact: showContact,
+        photos: photos,
       );
 
       final updatedPets = state.pets.map((pet) {

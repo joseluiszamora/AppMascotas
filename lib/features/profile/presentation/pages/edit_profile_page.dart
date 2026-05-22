@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_image_cropper.dart';
+import '../../../../core/widgets/photo_selection_thumbnail.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../blocs/profile_cubit.dart';
 import '../blocs/profile_state.dart';
@@ -79,35 +80,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
     if (picked == null || !mounted) return;
 
-    final cropped = await ImageCropper().cropImage(
+    final cropped = await AppImageCropper.cropSquareImage(
       sourcePath: picked.path,
-      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      title: 'Recortar foto',
       compressQuality: 90,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Recortar foto',
-          toolbarColor: AppColors.primary,
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.square,
-          lockAspectRatio: true,
-          hideBottomControls: false,
-          cropFrameColor: AppColors.primary,
-          cropGridColor: AppColors.primaryLight,
-          activeControlsWidgetColor: AppColors.primary,
-        ),
-        IOSUiSettings(
-          title: 'Recortar foto',
-          aspectRatioLockEnabled: true,
-          resetAspectRatioEnabled: false,
-          rotateButtonsHidden: false,
-          rotateClockwiseButtonHidden: false,
-        ),
-      ],
     );
     if (cropped == null || !mounted) return;
 
     setState(() {
-      _selectedAvatarFile = File(cropped.path);
+      _selectedAvatarFile = cropped;
       _removeAvatar = false;
     });
   }
@@ -261,61 +242,60 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Widget _buildAvatarSection(bool isSaving) {
+    final hasAvatar = _currentAvatarUrl != null || _selectedAvatarFile != null;
+
     return Center(
       child: Column(
         children: [
-          Stack(
-            children: [
-              Container(
-                width: 104,
-                height: 104,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.border, width: 2),
+          PhotoSelectionThumbnail(
+            size: 104,
+            isCircular: true,
+            overlayAction: Material(
+              color: isSaving ? AppColors.border : AppColors.primary,
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: isSaving ? null : _pickAvatar,
+                customBorder: const CircleBorder(),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.add_a_photo_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: _selectedAvatarFile != null
-                    ? Image.file(_selectedAvatarFile!, fit: BoxFit.cover)
-                    : _currentAvatarUrl != null
-                    ? Image.network(
-                        _currentAvatarUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(
-                              Icons.person_rounded,
-                              size: 48,
-                              color: AppColors.primary,
-                            ),
-                      )
-                    : const Icon(
+              ),
+            ),
+            child: _selectedAvatarFile != null
+                ? Image.file(_selectedAvatarFile!, fit: BoxFit.cover)
+                : _currentAvatarUrl != null
+                ? Image.network(
+                    _currentAvatarUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: AppColors.primaryLight,
+                      alignment: Alignment.center,
+                      child: const Icon(
                         Icons.person_rounded,
                         size: 48,
                         color: AppColors.primary,
                       ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: isSaving ? null : _pickAvatar,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: isSaving ? AppColors.border : AppColors.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
                     ),
+                  )
+                : Container(
+                    color: AppColors.primaryLight,
+                    alignment: Alignment.center,
                     child: const Icon(
-                      Icons.camera_alt_rounded,
-                      size: 16,
-                      color: Colors.white,
+                      Icons.person_rounded,
+                      size: 48,
+                      color: AppColors.primary,
                     ),
                   ),
-                ),
-              ),
-            ],
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -324,14 +304,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
             children: [
               TextButton.icon(
                 onPressed: isSaving ? null : _pickAvatar,
-                icon: const Icon(Icons.photo_library_outlined, size: 18),
-                label: Text(
-                  _currentAvatarUrl != null || _selectedAvatarFile != null
-                      ? 'Cambiar foto'
-                      : 'Subir foto',
-                ),
+                icon: const Icon(Icons.add_a_photo_rounded, size: 18),
+                label: Text(hasAvatar ? 'Cambiar foto' : 'Agregar foto'),
               ),
-              if (_currentAvatarUrl != null || _selectedAvatarFile != null)
+              if (hasAvatar)
                 TextButton.icon(
                   onPressed: isSaving ? null : _clearAvatarSelection,
                   icon: const Icon(Icons.delete_outline_rounded, size: 18),

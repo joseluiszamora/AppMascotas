@@ -7,6 +7,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_image_cropper.dart';
+import '../../../../core/widgets/photo_picker_action_tile.dart';
+import '../../../../core/widgets/photo_selection_thumbnail.dart';
 import '../blocs/report_form/report_form_cubit.dart';
 import '../blocs/report_form/report_form_state.dart';
 import '../../domain/entities/report_entity.dart';
@@ -53,7 +56,15 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
       maxWidth: 1400,
     );
     if (picked == null || !mounted) return;
-    setState(() => _photos.add(File(picked.path)));
+
+    final cropped = await AppImageCropper.cropSquareImage(
+      sourcePath: picked.path,
+      title: 'Recortar foto del reporte',
+      compressQuality: 90,
+    );
+    if (cropped == null || !mounted) return;
+
+    setState(() => _photos.add(cropped));
   }
 
   Future<void> _pickOccurredAt() async {
@@ -461,82 +472,17 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
           ..._photos.map(
             (file) => Padding(
               padding: const EdgeInsets.only(right: 10),
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.file(
-                      file,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: GestureDetector(
-                      onTap: () => setState(() => _photos.remove(file)),
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(160),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              child: PhotoSelectionThumbnail(
+                onRemove: () => setState(() => _photos.remove(file)),
+                child: Image.file(file, fit: BoxFit.cover),
               ),
             ),
           ),
-          GestureDetector(
+          PhotoPickerActionTile(
             onTap: _pickPhoto,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: _photos.isEmpty
-                    ? AppColors.pastelGreen
-                    : AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _photos.isEmpty
-                      ? AppColors.foundPet.withAlpha(80)
-                      : AppColors.border,
-                  width: _photos.isEmpty ? 2 : 1,
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.add_a_photo_rounded,
-                    color: _photos.isEmpty
-                        ? AppColors.foundPet
-                        : AppColors.textHint,
-                    size: 28,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Agregar',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: _photos.isEmpty
-                          ? AppColors.foundPet
-                          : AppColors.textHint,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            accentColor: AppColors.foundPet,
+            highlighted: _photos.isEmpty,
+            hasPhotos: _photos.isNotEmpty,
           ),
         ],
       ),

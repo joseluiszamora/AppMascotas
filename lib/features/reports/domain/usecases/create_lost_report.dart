@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../entities/report_entity.dart';
 import '../repositories/report_repository.dart';
 
@@ -14,6 +16,7 @@ class CreateLostReport {
     required DateTime occurredAt,
     String? description,
     required bool showContact,
+    List<File> photos = const [],
   }) {
     return _repository.createLostReport(
       petId: petId,
@@ -23,6 +26,7 @@ class CreateLostReport {
       occurredAt: occurredAt,
       description: description,
       showContact: showContact,
+      photos: photos,
     );
   }
 }

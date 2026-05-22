@@ -1,11 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_image_cropper.dart';
+import '../../../../core/widgets/photo_picker_action_tile.dart';
+import '../../../../core/widgets/photo_selection_thumbnail.dart';
 import '../../../auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../../auth/presentation/blocs/auth/auth_state.dart';
 import '../../../pets/domain/entities/pet_entity.dart';
@@ -24,10 +30,12 @@ class LostReportFormScreen extends StatefulWidget {
 
 class _LostReportFormScreenState extends State<LostReportFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _imagePicker = ImagePicker();
   final _latitudeCtrl = TextEditingController();
   final _longitudeCtrl = TextEditingController();
   final _locationDescriptionCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
+  final List<File> _photos = [];
 
   DateTime _occurredAt = DateTime.now();
   String? _selectedPetId;
@@ -81,6 +89,24 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
         time.minute,
       );
     });
+  }
+
+  Future<void> _pickPhoto() async {
+    final picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 1400,
+    );
+    if (picked == null || !mounted) return;
+
+    final cropped = await AppImageCropper.cropSquareImage(
+      sourcePath: picked.path,
+      title: 'Recortar foto del reporte',
+      compressQuality: 90,
+    );
+    if (cropped == null || !mounted) return;
+
+    setState(() => _photos.add(cropped));
   }
 
   Future<void> _useCurrentLocation() async {
@@ -156,6 +182,7 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
           ? null
           : _descriptionCtrl.text.trim(),
       showContact: _showContact,
+      photos: List<File>.from(_photos),
     );
   }
 
@@ -250,7 +277,8 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                               .toList(),
                           onChanged: state.isSubmitting
                               ? null
-                              : (value) => setState(() => _selectedPetId = value),
+                              : (value) =>
+                                    setState(() => _selectedPetId = value),
                           decoration: _inputDecoration('Selecciona tu mascota'),
                           validator: (value) =>
                               value == null ? 'Selecciona una mascota' : null,
@@ -260,6 +288,10 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                           _SelectedPetCard(pet: selectedPet),
                         ],
                         const SizedBox(height: 20),
+                        _buildLabel('Fotos adicionales'),
+                        const SizedBox(height: 8),
+                        _buildPhotosSection(),
+                        const SizedBox(height: 20),
                         _buildLabel('Ubicación aproximada *'),
                         const SizedBox(height: 8),
                         Row(
@@ -267,10 +299,11 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _latitudeCtrl,
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                  signed: true,
-                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                      signed: true,
+                                    ),
                                 decoration: _inputDecoration('Latitud'),
                                 validator: _validateCoordinate,
                               ),
@@ -279,10 +312,11 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _longitudeCtrl,
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                  signed: true,
-                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                      signed: true,
+                                    ),
                                 decoration: _inputDecoration('Longitud'),
                                 validator: _validateCoordinate,
                               ),
@@ -298,7 +332,9 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.my_location_rounded),
                           label: Text(
@@ -340,7 +376,10 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    DateFormat('d MMM y, HH:mm', 'es').format(_occurredAt),
+                                    DateFormat(
+                                      'd MMM y, HH:mm',
+                                      'es',
+                                    ).format(_occurredAt),
                                     style: const TextStyle(
                                       fontSize: 15,
                                       color: AppColors.textPrimary,
@@ -377,7 +416,8 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                             value: _showContact,
                             onChanged: state.isSubmitting
                                 ? null
-                                : (value) => setState(() => _showContact = value),
+                                : (value) =>
+                                      setState(() => _showContact = value),
                             title: const Text(
                               'Mostrar mis datos de contacto',
                               style: TextStyle(
@@ -453,7 +493,7 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Este reporte usará las fotos ya registradas de la mascota y la marcará como perdida.',
+              'Este reporte usará las fotos ya registradas de la mascota. También puedes agregar fotos recientes del caso antes de publicarlo.',
               style: TextStyle(
                 fontSize: 13,
                 height: 1.35,
@@ -478,13 +518,36 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
     );
   }
 
+  Widget _buildPhotosSection() {
+    return SizedBox(
+      height: 100,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          ..._photos.map(
+            (file) => Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: PhotoSelectionThumbnail(
+                onRemove: () => setState(() => _photos.remove(file)),
+                child: Image.file(file, fit: BoxFit.cover),
+              ),
+            ),
+          ),
+          PhotoPickerActionTile(
+            onTap: _pickPhoto,
+            accentColor: AppColors.lostPet,
+            highlighted: _photos.isEmpty,
+            hasPhotos: _photos.isNotEmpty,
+          ),
+        ],
+      ),
+    );
+  }
+
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(
-        fontSize: 14,
-        color: AppColors.textHint,
-      ),
+      hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
       filled: true,
       fillColor: AppColors.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -544,7 +607,8 @@ class _SelectedPetCard extends StatelessWidget {
                   ? Image.network(
                       pet.primaryPhotoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, error, stackTrace) => _PlaceholderPhoto(pet: pet),
+                      errorBuilder: (_, error, stackTrace) =>
+                          _PlaceholderPhoto(pet: pet),
                     )
                   : _PlaceholderPhoto(pet: pet),
             ),
@@ -653,10 +717,7 @@ class _EmptyPetsState extends StatelessWidget {
             const Text(
               'Para reportar una pérdida, primero registra la mascota en tu cuenta.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 20),
             FilledButton(

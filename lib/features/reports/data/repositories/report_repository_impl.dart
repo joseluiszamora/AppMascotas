@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../../domain/entities/report_entity.dart';
+import '../../domain/entities/report_map_query.dart';
 import '../../domain/repositories/report_repository.dart';
 import '../providers/report_provider.dart';
 
@@ -15,13 +16,18 @@ class ReportRepositoryImpl implements ReportRepository {
   }
 
   @override
-  Future<List<ReportEntity>> getMapReports() {
-    return _provider.getMapReports();
+  Future<List<ReportEntity>> getMapReports(ReportMapQuery query) {
+    return _provider.getMapReports(query);
   }
 
   @override
   Future<List<ReportEntity>> getRecentReports({int limit = 5}) {
     return _provider.getRecentReports(limit: limit);
+  }
+
+  @override
+  Future<List<ReportEntity>> getMyReports({int limit = 100}) {
+    return _provider.getMyReports(limit: limit);
   }
 
   @override
@@ -62,6 +68,7 @@ class ReportRepositoryImpl implements ReportRepository {
     required DateTime occurredAt,
     String? description,
     required bool showContact,
+    List<File> photos = const [],
   }) {
     return _provider.createLostReport(
       petId: petId,
@@ -71,6 +78,7 @@ class ReportRepositoryImpl implements ReportRepository {
       occurredAt: occurredAt,
       description: description,
       showContact: showContact,
+      photos: photos,
     );
   }
 }

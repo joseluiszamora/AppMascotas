@@ -3,20 +3,31 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/service_locator.dart';
 import '../../../reports/domain/entities/report_entity.dart';
+import '../../../reports/domain/entities/report_map_query.dart';
 import '../../../reports/domain/usecases/get_map_reports.dart';
+import '../../../reports/presentation/widgets/my_reports_section.dart';
+import '../../../reports/presentation/utils/report_actions.dart';
 
 class ReportsMapPage extends StatefulWidget {
-  const ReportsMapPage({super.key});
+  const ReportsMapPage({super.key, this.refreshToken = 0});
+
+  final int refreshToken;
 
   @override
   State<ReportsMapPage> createState() => _ReportsMapPageState();
 }
+
+enum _MapViewMode { markers, incidence }
+
+enum _ReportsSection { map, mine }
 
 class _ReportsMapPageState extends State<ReportsMapPage> {
   static const _defaultCenter = LatLng(4.7110, -74.0721);
@@ -24,9 +35,12 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
   final MapController _mapController = MapController();
 
   late Future<List<ReportEntity>> _future;
+  LatLng _queryCenter = _defaultCenter;
   LatLng _mapCenter = _defaultCenter;
-  LatLng? _userLocation;
   bool _isLocating = false;
+  bool _hasPendingAreaSearch = false;
+  _MapViewMode _viewMode = _MapViewMode.markers;
+  _ReportsSection _section = _ReportsSection.map;
 
   bool _includeLost = true;
   bool _includeFound = true;
@@ -47,12 +61,41 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _centerOnCurrentLocation());
   }
 
-  Future<List<ReportEntity>> _loadReports() {
-    return sl<GetMapReports>()();
+  @override
+  void didUpdateWidget(covariant ReportsMapPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshToken != widget.refreshToken) {
+      _reloadReports();
+    }
   }
 
-  Future<void> _reloadReports() async {
+  Future<List<ReportEntity>> _loadReports() {
+    return sl<GetMapReports>()(
+      ReportMapQuery(
+        centerLatitude: _queryCenter.latitude,
+        centerLongitude: _queryCenter.longitude,
+        radiusKm: _radiusKm,
+        includeLost: _includeLost,
+        includeFound: _includeFound,
+        zone: _zone,
+        neighborhood: _neighborhood,
+        city: _city,
+        petType: _petType,
+        breed: _breed,
+        color: _color,
+        size: _size,
+        status: _status,
+      ),
+    );
+  }
+
+  Future<void> _reloadReports({LatLng? center}) async {
     setState(() {
+      if (center != null) {
+        _queryCenter = center;
+        _mapCenter = center;
+      }
+      _hasPendingAreaSearch = false;
       _future = _loadReports();
     });
   }
@@ -61,13 +104,17 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     setState(() => _isLocating = true);
     try {
       final isEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!isEnabled) return;
+      if (!isEnabled) {
+        _showMessage('Activa la ubicación del dispositivo para centrar el mapa.');
+        return;
+      }
 
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        _showMessage('No pudimos acceder a tu ubicación actual.');
         return;
       }
 
@@ -78,58 +125,19 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
 
       final nextCenter = LatLng(position.latitude, position.longitude);
       setState(() {
-        _userLocation = nextCenter;
         _mapCenter = nextCenter;
+        _queryCenter = nextCenter;
+        _hasPendingAreaSearch = false;
+        _future = _loadReports();
       });
       _mapController.move(nextCenter, 13);
     } catch (_) {
+      _showMessage('No pudimos obtener tu ubicación actual.');
     } finally {
       if (mounted) {
         setState(() => _isLocating = false);
       }
     }
-  }
-
-  List<ReportEntity> _applyFilters(List<ReportEntity> reports) {
-    return reports.where((report) {
-      if (!_includeLost && report.type == ReportType.lost) return false;
-      if (!_includeFound && report.type == ReportType.found) return false;
-      if (_status != null && report.status != _status) return false;
-      if (_petType != null && report.effectivePetType != _petType) return false;
-      if (_size != null && report.effectivePetSize != _size) return false;
-
-      final location = (report.locationDescription ?? '').toLowerCase();
-      if (_zone.trim().isNotEmpty && !location.contains(_zone.trim().toLowerCase())) {
-        return false;
-      }
-      if (_neighborhood.trim().isNotEmpty && !location.contains(_neighborhood.trim().toLowerCase())) {
-        return false;
-      }
-      if (_city.trim().isNotEmpty && !location.contains(_city.trim().toLowerCase())) {
-        return false;
-      }
-
-      if (_breed.trim().isNotEmpty) {
-        final breed = (report.petBreed ?? '').toLowerCase();
-        if (!breed.contains(_breed.trim().toLowerCase())) return false;
-      }
-
-      if (_color.trim().isNotEmpty) {
-        final color = (report.effectivePetColor ?? '').toLowerCase();
-        if (!color.contains(_color.trim().toLowerCase())) return false;
-      }
-
-      final center = _userLocation ?? _mapCenter;
-      final distanceKm = _distanceKm(
-        center.latitude,
-        center.longitude,
-        report.latitude,
-        report.longitude,
-      );
-      if (distanceKm > _radiusKm) return false;
-
-      return true;
-    }).toList();
   }
 
   double _distanceKm(double lat1, double lon1, double lat2, double lon2) {
@@ -145,11 +153,30 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
 
   double _toRadians(double degrees) => degrees * math.pi / 180;
 
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   void _openReportDetail(ReportEntity report) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => _ReportDetailSheet(report: report),
+      builder: (sheetContext) => _ReportDetailSheet(
+        report: report,
+        onOpenDetail: () {
+          Navigator.of(sheetContext).pop();
+          context.push(AppRoutes.reportDetail(report.id));
+        },
+        onShare: () => shareReport(context, report),
+        onNavigate: () => openReportNavigation(context, report),
+      ),
     );
   }
 
@@ -186,7 +213,88 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
       _color = result.color;
       _size = result.size;
       _status = result.status;
+      _future = _loadReports();
+      _hasPendingAreaSearch = false;
     });
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _includeLost = true;
+      _includeFound = true;
+      _zone = '';
+      _neighborhood = '';
+      _city = '';
+      _radiusKm = 10;
+      _petType = null;
+      _breed = '';
+      _color = '';
+      _size = null;
+      _status = null;
+      _future = _loadReports();
+      _hasPendingAreaSearch = false;
+    });
+  }
+
+  List<_IncidenceZone> _buildIncidenceZones(List<ReportEntity> reports) {
+    final buckets = <String, _IncidenceAccumulator>{};
+
+    for (final report in reports) {
+      final bucketLat = double.parse(report.approximateLatitude.toStringAsFixed(2));
+      final bucketLon = double.parse(report.approximateLongitude.toStringAsFixed(2));
+      final key = '$bucketLat,$bucketLon';
+      final current = buckets[key];
+      if (current == null) {
+        buckets[key] = _IncidenceAccumulator(
+          latitude: bucketLat,
+          longitude: bucketLon,
+          labels: [reportLocationLabel(report)],
+          count: 1,
+        );
+      } else {
+        current.count++;
+        current.labels.add(reportLocationLabel(report));
+      }
+    }
+
+    final zones = buckets.values
+        .map(
+          (bucket) => _IncidenceZone(
+            center: LatLng(bucket.latitude, bucket.longitude),
+            count: bucket.count,
+            label: bucket.labels.firstWhere(
+              (label) => label.trim().isNotEmpty,
+              orElse: () => '${bucket.latitude.toStringAsFixed(2)}, ${bucket.longitude.toStringAsFixed(2)}',
+            ),
+          ),
+        )
+        .toList()
+      ..sort((a, b) => b.count.compareTo(a.count));
+
+    return zones;
+  }
+
+  double _zoneRadiusMeters(int count) => 220 + (count * 120);
+
+  Color _zoneColor(int count) {
+    if (count >= 5) return AppColors.error;
+    if (count >= 3) return AppColors.primary;
+    return AppColors.foundPet;
+  }
+
+  int _activeFilterCount() {
+    var total = 0;
+    if (!(_includeLost && _includeFound)) total++;
+    if (_zone.trim().isNotEmpty) total++;
+    if (_neighborhood.trim().isNotEmpty) total++;
+    if (_city.trim().isNotEmpty) total++;
+    if (_radiusKm != 10) total++;
+    if (_petType != null) total++;
+    if (_breed.trim().isNotEmpty) total++;
+    if (_color.trim().isNotEmpty) total++;
+    if (_size != null) total++;
+    if (_status != null) total++;
+    return total;
   }
 
   @override
@@ -198,191 +306,404 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mapa de reportes',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'OSM · reportes activos cercanos',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                  const Text(
+                    'Reportes',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.4,
                     ),
                   ),
-                  IconButton.filledTonal(
-                    onPressed: _openFilters,
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.surface,
-                      foregroundColor: AppColors.textPrimary,
+                  const SizedBox(height: 4),
+                  Text(
+                    _section == _ReportsSection.map
+                        ? 'OSM · reportes activos cercanos'
+                        : 'Tus reportes con filtros por tipo, mascota y estado',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
                     ),
-                    icon: const Icon(Icons.tune_rounded),
                   ),
                 ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  _FilterSummaryChip(
-                    label: _includeLost && _includeFound
-                        ? 'Todos'
-                        : _includeLost
-                        ? 'Perdidas'
-                        : _includeFound
-                        ? 'Encontradas'
-                        : 'Sin tipos',
+              child: SegmentedButton<_ReportsSection>(
+                segments: const [
+                  ButtonSegment<_ReportsSection>(
+                    value: _ReportsSection.map,
+                    icon: Icon(Icons.map_rounded),
+                    label: Text('Mapa'),
                   ),
-                  const SizedBox(width: 8),
-                  _FilterSummaryChip(label: 'Radio ${_radiusKm.toStringAsFixed(0)} km'),
-                  if (_petType != null) ...[
-                    const SizedBox(width: 8),
-                    _FilterSummaryChip(label: _petTypeLabel(_petType!)),
-                  ],
+                  ButtonSegment<_ReportsSection>(
+                    value: _ReportsSection.mine,
+                    icon: Icon(Icons.assignment_rounded),
+                    label: Text('Mis reportes'),
+                  ),
                 ],
+                selected: <_ReportsSection>{_section},
+                onSelectionChanged: (selection) {
+                  setState(() => _section = selection.first);
+                },
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.primary.withAlpha(26)
+                        : AppColors.surface,
+                  ),
+                  side: WidgetStateProperty.all(
+                    const BorderSide(color: AppColors.border),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: FutureBuilder<List<ReportEntity>>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    return _MapFeedbackState(
-                      icon: Icons.wifi_off_rounded,
-                      title: 'No pudimos cargar el mapa',
-                      message: 'Intenta de nuevo para actualizar los reportes activos.',
-                      actionLabel: 'Reintentar',
-                      onAction: _reloadReports,
-                    );
-                  }
-
-                  final reports = _applyFilters(snapshot.data ?? const <ReportEntity>[]);
-                  if (reports.isEmpty) {
-                    return _MapFeedbackState(
-                      icon: Icons.location_searching_rounded,
-                      title: 'Sin resultados con estos filtros',
-                      message: 'Ajusta el radio o los filtros para ver más reportes.',
-                      actionLabel: 'Limpiar filtros',
-                      onAction: () {
-                        setState(() {
-                          _includeLost = true;
-                          _includeFound = true;
-                          _zone = '';
-                          _neighborhood = '';
-                          _city = '';
-                          _radiusKm = 10;
-                          _petType = null;
-                          _breed = '';
-                          _color = '';
-                          _size = null;
-                          _status = null;
-                        });
-                      },
-                    );
-                  }
-
-                  final markers = reports
-                      .map(
-                        (report) => Marker(
-                          point: LatLng(report.latitude, report.longitude),
-                          width: 54,
-                          height: 54,
-                          child: GestureDetector(
-                            onTap: () => _openReportDetail(report),
-                            child: _ReportMarker(report: report),
-                          ),
-                        ),
-                      )
-                      .toList();
-
-                  return Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
-                          child: FlutterMap(
-                            mapController: _mapController,
-                            options: MapOptions(
-                              initialCenter: _mapCenter,
-                              initialZoom: 12,
-                              onPositionChanged: (position, hasGesture) {
-                                final center = position.center;
-                                _mapCenter = center;
-                              },
-                            ),
-                            children: [
-                              TileLayer(
-                                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                userAgentPackageName: 'com.appmascotas.app',
-                              ),
-                              MarkerLayer(markers: markers),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 32,
-                        bottom: 36,
-                        child: Column(
-                          children: [
-                            FloatingActionButton.small(
-                              heroTag: 'map-refresh',
-                              backgroundColor: AppColors.surface,
-                              foregroundColor: AppColors.textPrimary,
-                              onPressed: _reloadReports,
-                              child: const Icon(Icons.refresh_rounded),
-                            ),
-                            const SizedBox(height: 10),
-                            FloatingActionButton.small(
-                              heroTag: 'map-center',
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              onPressed: _isLocating ? null : _centerOnCurrentLocation,
-                              child: _isLocating
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.my_location_rounded),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
+              child: IndexedStack(
+                index: _section.index,
+                children: [
+                  _buildMapSection(),
+                  MyReportsSection(refreshToken: widget.refreshToken),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMapSection() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
+          child: Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Explora el mapa',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Busca actividad reciente por zona, tipo y estado.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_activeFilterCount() > 0)
+                TextButton(
+                  onPressed: _resetFilters,
+                  child: const Text('Limpiar'),
+                ),
+              IconButton.filledTonal(
+                onPressed: _openFilters,
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.surface,
+                  foregroundColor: AppColors.textPrimary,
+                ),
+                icon: const Icon(Icons.tune_rounded),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _FilterSummaryChip(
+                label: _includeLost && _includeFound
+                    ? 'Todos'
+                    : _includeLost
+                    ? 'Perdidas'
+                    : _includeFound
+                    ? 'Encontradas'
+                    : 'Sin tipos',
+              ),
+              _FilterSummaryChip(
+                label: 'Radio ${_radiusKm.toStringAsFixed(0)} km',
+              ),
+              if (_petType != null)
+                _FilterSummaryChip(label: _petTypeLabel(_petType!)),
+              _FilterSummaryChip(
+                label: _activeFilterCount() == 0
+                    ? 'Sin filtros extra'
+                    : '${_activeFilterCount()} filtros',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Privacidad del mapa',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Los puntos y rutas usan ubicación aproximada para proteger la privacidad del reporte.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SegmentedButton<_MapViewMode>(
+            segments: const [
+              ButtonSegment<_MapViewMode>(
+                value: _MapViewMode.markers,
+                icon: Icon(Icons.place_rounded),
+                label: Text('Marcadores'),
+              ),
+              ButtonSegment<_MapViewMode>(
+                value: _MapViewMode.incidence,
+                icon: Icon(Icons.blur_on_rounded),
+                label: Text('Incidencia'),
+              ),
+            ],
+            selected: <_MapViewMode>{_viewMode},
+            onSelectionChanged: (selection) {
+              setState(() => _viewMode = selection.first);
+            },
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? AppColors.primary.withAlpha(26)
+                    : AppColors.surface,
+              ),
+              side: WidgetStateProperty.all(
+                const BorderSide(color: AppColors.border),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: FutureBuilder<List<ReportEntity>>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return _MapFeedbackState(
+                  icon: Icons.wifi_off_rounded,
+                  title: 'No pudimos cargar el mapa',
+                  message: 'Intenta de nuevo para actualizar los reportes activos.',
+                  actionLabel: 'Reintentar',
+                  onAction: _reloadReports,
+                );
+              }
+
+              final reports = snapshot.data ?? const <ReportEntity>[];
+              if (reports.isEmpty) {
+                return _MapFeedbackState(
+                  icon: Icons.location_searching_rounded,
+                  title: 'Sin resultados con estos filtros',
+                  message: 'Ajusta el radio o los filtros para ver más reportes.',
+                  actionLabel: 'Limpiar filtros',
+                  onAction: _resetFilters,
+                );
+              }
+
+              final incidenceZones = _buildIncidenceZones(reports);
+
+              final markers = reports
+                  .map(
+                    (report) => Marker(
+                      point: LatLng(
+                        report.approximateLatitude,
+                        report.approximateLongitude,
+                      ),
+                      width: 54,
+                      height: 54,
+                      child: GestureDetector(
+                        onTap: () => _openReportDetail(report),
+                        child: _ReportMarker(report: report),
+                      ),
+                    ),
+                  )
+                  .toList();
+
+              final incidenceCircles = incidenceZones
+                  .map(
+                    (zone) => CircleMarker(
+                      point: zone.center,
+                      radius: _zoneRadiusMeters(zone.count),
+                      color: _zoneColor(zone.count).withAlpha(56),
+                      borderColor: _zoneColor(zone.count),
+                      borderStrokeWidth: 2,
+                    ),
+                  )
+                  .toList();
+
+              final incidenceMarkers = incidenceZones
+                  .map(
+                    (zone) => Marker(
+                      point: zone.center,
+                      width: 52,
+                      height: 52,
+                      child: _IncidenceCountBadge(count: zone.count),
+                    ),
+                  )
+                  .toList();
+
+              return Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: _mapCenter,
+                          initialZoom: 12,
+                          onPositionChanged: (position, hasGesture) {
+                            final center = position.center;
+                            if (!hasGesture) {
+                              _mapCenter = center;
+                              return;
+                            }
+
+                            final movedKm = _distanceKm(
+                              center.latitude,
+                              center.longitude,
+                              _queryCenter.latitude,
+                              _queryCenter.longitude,
+                            );
+                            setState(() {
+                              _mapCenter = center;
+                              _hasPendingAreaSearch =
+                                  movedKm > math.max(0.7, _radiusKm * 0.2);
+                            });
+                          },
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.appmascotas.app',
+                          ),
+                          if (_viewMode == _MapViewMode.incidence)
+                            CircleLayer(circles: incidenceCircles),
+                          MarkerLayer(
+                            markers: _viewMode == _MapViewMode.markers
+                                ? markers
+                                : incidenceMarkers,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_hasPendingAreaSearch)
+                    Positioned(
+                      top: 18,
+                      left: 52,
+                      right: 52,
+                      child: FilledButton.icon(
+                        onPressed: () => _reloadReports(center: _mapCenter),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        icon: const Icon(Icons.search_rounded),
+                        label: const Text('Buscar en esta zona'),
+                      ),
+                    ),
+                  Positioned(
+                    left: 32,
+                    bottom: 34,
+                    child: _MapStatsCard(
+                      reportsCount: reports.length,
+                      queryCenter: _queryCenter,
+                      viewMode: _viewMode,
+                      topZones: incidenceZones.take(3).toList(),
+                    ),
+                  ),
+                  Positioned(
+                    right: 32,
+                    bottom: 36,
+                    child: Column(
+                      children: [
+                        FloatingActionButton.small(
+                          heroTag: 'map-refresh',
+                          backgroundColor: AppColors.surface,
+                          foregroundColor: AppColors.textPrimary,
+                          onPressed: _reloadReports,
+                          child: const Icon(Icons.refresh_rounded),
+                        ),
+                        const SizedBox(height: 10),
+                        FloatingActionButton.small(
+                          heroTag: 'map-center',
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          onPressed: _isLocating ? null : _centerOnCurrentLocation,
+                          child: _isLocating
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.my_location_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -815,16 +1136,22 @@ String _petTypeLabel(ReportPetType type) => switch (type) {
 };
 
 class _ReportDetailSheet extends StatelessWidget {
-  const _ReportDetailSheet({required this.report});
+  const _ReportDetailSheet({
+    required this.report,
+    required this.onOpenDetail,
+    required this.onShare,
+    required this.onNavigate,
+  });
 
   final ReportEntity report;
+  final VoidCallback onOpenDetail;
+  final VoidCallback onShare;
+  final VoidCallback onNavigate;
 
   @override
   Widget build(BuildContext context) {
     final dateLabel = DateFormat('d MMM y, HH:mm', 'es').format(report.occurredAt);
-    final title = report.type == ReportType.lost
-        ? (report.petName ?? 'Mascota perdida')
-        : _foundReportTitle(report);
+    final title = reportTitle(report);
     final badgeColor = report.type == ReportType.lost ? AppColors.lostPet : AppColors.foundPet;
     final badgeBg = report.type == ReportType.lost ? AppColors.pastelPink : AppColors.pastelGreen;
 
@@ -909,7 +1236,7 @@ class _ReportDetailSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        report.locationDescription ?? 'Ubicación aproximada registrada',
+                        reportLocationLabel(report),
                         style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                       ),
                     ],
@@ -919,6 +1246,13 @@ class _ReportDetailSheet extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _DetailRow(icon: Icons.schedule_rounded, text: dateLabel),
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: _DetailRow(
+                icon: Icons.pin_drop_outlined,
+                text: 'Punto aprox. ${reportApproximateCoordinatesLabel(report)}',
+              ),
+            ),
             if (report.petBreed != null && report.petBreed!.trim().isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
@@ -928,9 +1262,7 @@ class _ReportDetailSheet extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  report.description?.trim().isNotEmpty == true
-                      ? report.description!
-                      : report.foundPetDescription!,
+                  reportDescriptionText(report),
                   style: const TextStyle(
                     fontSize: 14,
                     height: 1.4,
@@ -938,24 +1270,44 @@ class _ReportDetailSheet extends StatelessWidget {
                   ),
                 ),
               ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onOpenDetail,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: const Icon(Icons.visibility_rounded),
+                    label: const Text('Ver reporte'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onNavigate,
+                    icon: const Icon(Icons.navigation_rounded),
+                    label: const Text('Navegar'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onShare,
+                icon: const Icon(Icons.share_rounded),
+                label: const Text('Compartir reporte'),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-}
-
-String _foundReportTitle(ReportEntity report) {
-  final petType = switch (report.foundPetType) {
-    ReportPetType.cat => 'Gato encontrado',
-    ReportPetType.other => 'Mascota encontrada',
-    _ => 'Perro encontrado',
-  };
-  final color = report.foundPetColor?.trim();
-  if (color == null || color.isEmpty) {
-    return petType;
-  }
-  return '$petType · $color';
 }
 
 class _DetailRow extends StatelessWidget {
@@ -979,4 +1331,161 @@ class _DetailRow extends StatelessWidget {
       ],
     );
   }
+}
+
+class _MapStatsCard extends StatelessWidget {
+  const _MapStatsCard({
+    required this.reportsCount,
+    required this.queryCenter,
+    required this.viewMode,
+    required this.topZones,
+  });
+
+  final int reportsCount;
+  final LatLng queryCenter;
+  final _MapViewMode viewMode;
+  final List<_IncidenceZone> topZones;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 210,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background.withAlpha(240),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x16000000),
+            blurRadius: 22,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            viewMode == _MapViewMode.markers ? 'Resultados visibles' : 'Zonas de mayor incidencia',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '$reportsCount reportes dentro de ${queryCenter.latitude.toStringAsFixed(2)}, ${queryCenter.longitude.toStringAsFixed(2)}',
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          if (viewMode == _MapViewMode.incidence && topZones.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ...topZones.map(
+              (zone) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(24),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${zone.count}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        zone.label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _IncidenceCountBadge extends StatelessWidget {
+  const _IncidenceCountBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.primary, width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x24000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '$count',
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          color: AppColors.primary,
+        ),
+      ),
+    );
+  }
+}
+
+class _IncidenceAccumulator {
+  _IncidenceAccumulator({
+    required this.latitude,
+    required this.longitude,
+    required this.labels,
+    required this.count,
+  });
+
+  final double latitude;
+  final double longitude;
+  final List<String> labels;
+  int count;
+}
+
+class _IncidenceZone {
+  const _IncidenceZone({
+    required this.center,
+    required this.count,
+    required this.label,
+  });
+
+  final LatLng center;
+  final int count;
+  final String label;
 }

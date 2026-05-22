@@ -78,11 +78,21 @@ class ReportEntity extends Equatable {
 
   String? get primaryPhotoUrl => photos.isEmpty ? null : photos.first.url;
 
-  ReportPetType? get effectivePetType => type == ReportType.lost ? petType : foundPetType;
+  double get approximateLatitude => _roundCoordinate(latitude);
 
-  ReportPetSize? get effectivePetSize => type == ReportType.lost ? petSize : foundPetSize;
+  double get approximateLongitude => _roundCoordinate(longitude);
 
-  String? get effectivePetColor => type == ReportType.lost ? petColor : foundPetColor;
+  ReportPetType? get effectivePetType =>
+      type == ReportType.lost ? petType : foundPetType;
+
+  ReportPetSize? get effectivePetSize =>
+      type == ReportType.lost ? petSize : foundPetSize;
+
+  String? get effectivePetColor =>
+      type == ReportType.lost ? petColor : foundPetColor;
+
+  static double _roundCoordinate(double value) =>
+      double.parse(value.toStringAsFixed(3));
 
   @override
   List<Object?> get props => [

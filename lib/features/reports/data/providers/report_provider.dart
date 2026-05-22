@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/report_entity.dart';
+import '../../domain/entities/report_map_query.dart';
 import '../models/report_model.dart';
 
 class ReportProvider {
@@ -98,13 +100,16 @@ class ReportProvider {
     final bytes = await file.readAsBytes();
     final ext = _resolveExtension(file.path, bytes);
     final mimeType = _mimeTypeForExtension(ext);
-    final path = '$userId/$reportId/${DateTime.now().millisecondsSinceEpoch}.$ext';
+    final path =
+        '$userId/$reportId/${DateTime.now().millisecondsSinceEpoch}.$ext';
 
-    await supabase.storage.from(_storageBucket).uploadBinary(
-      path,
-      bytes,
-      fileOptions: FileOptions(contentType: mimeType, upsert: false),
-    );
+    await supabase.storage
+        .from(_storageBucket)
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: mimeType, upsert: false),
+        );
 
     return path;
   }
@@ -112,7 +117,9 @@ class ReportProvider {
   Future<List<ReportEntity>> getRecentReports({int limit = 5}) async {
     final data = await supabase
         .from('reports')
-        .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
+        .select(
+          '*, report_photos(*), pets(name, breed, type, dominant_color, size)',
+        )
         .inFilter('status', ['active', 'under_review'])
         .order('created_at', ascending: false)
         .limit(limit);
@@ -122,23 +129,119 @@ class ReportProvider {
         .toList();
   }
 
-  Future<List<ReportEntity>> getMapReports() async {
+  Future<List<ReportEntity>> getMyReports({int limit = 100}) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('Usuario no autenticado');
+    }
+
     final data = await supabase
         .from('reports')
-        .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
-        .inFilter('status', ['active', 'under_review'])
-        .order('occurred_at', ascending: false)
-        .limit(250);
+        .select(
+          '*, report_photos(*), pets(name, breed, type, dominant_color, size)',
+        )
+        .eq('reporter_id', userId)
+        .order('created_at', ascending: false)
+        .limit(limit);
 
     return (data as List<dynamic>)
         .map((row) => ReportModel.fromJson(row as Map<String, dynamic>))
         .toList();
   }
 
+  Future<List<ReportEntity>> getMapReports(ReportMapQuery query) async {
+    if (!query.includeLost && !query.includeFound) {
+      return const [];
+    }
+
+    final bounds = _boundsForRadius(
+      latitude: query.centerLatitude,
+      longitude: query.centerLongitude,
+      radiusKm: query.radiusKm,
+    );
+
+    var request = supabase
+        .from('reports')
+        .select(
+          '*, report_photos(*), pets(name, breed, type, dominant_color, size)',
+        );
+
+    request = request
+        .gte('latitude', bounds.minLatitude)
+        .lte('latitude', bounds.maxLatitude)
+        .gte('longitude', bounds.minLongitude)
+        .lte('longitude', bounds.maxLongitude);
+
+    request = request.inFilter(
+      'status',
+      query.status == null
+          ? ['active', 'under_review']
+          : [_statusToString(query.status!)],
+    );
+
+    if (query.includeLost != query.includeFound) {
+      request = request.eq('type', query.includeLost ? 'lost' : 'found');
+    }
+
+    final zone = query.zone?.trim();
+    if (zone != null && zone.isNotEmpty) {
+      request = request.ilike('location_description', '%$zone%');
+    }
+
+    final neighborhood = query.neighborhood?.trim();
+    if (neighborhood != null && neighborhood.isNotEmpty) {
+      request = request.ilike('location_description', '%$neighborhood%');
+    }
+
+    final city = query.city?.trim();
+    if (city != null && city.isNotEmpty) {
+      request = request.ilike('location_description', '%$city%');
+    }
+
+    final breed = query.breed?.trim().toLowerCase();
+    final color = query.color?.trim().toLowerCase();
+
+    final data = await request
+        .order('occurred_at', ascending: false)
+        .limit(query.limit);
+
+    return (data as List<dynamic>)
+        .map((row) => ReportModel.fromJson(row as Map<String, dynamic>))
+        .where((report) {
+          if (query.petType != null &&
+              report.effectivePetType != query.petType) {
+            return false;
+          }
+
+          if (query.size != null && report.effectivePetSize != query.size) {
+            return false;
+          }
+
+          if (breed != null && breed.isNotEmpty) {
+            final reportBreed = report.petBreed?.toLowerCase() ?? '';
+            if (!reportBreed.contains(breed)) {
+              return false;
+            }
+          }
+
+          if (color != null && color.isNotEmpty) {
+            final reportColor = report.effectivePetColor?.toLowerCase() ?? '';
+            if (!reportColor.contains(color)) {
+              return false;
+            }
+          }
+
+          return true;
+        })
+        .toList();
+  }
+
   Future<ReportEntity> getReportById(String reportId) async {
     final data = await supabase
         .from('reports')
-        .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
+        .select(
+          '*, report_photos(*), pets(name, breed, type, dominant_color, size)',
+        )
         .eq('id', reportId)
         .single();
 
@@ -190,7 +293,9 @@ class ReportProvider {
           file: photo,
         );
         uploadedPaths.add(storagePath);
-        final url = supabase.storage.from(_storageBucket).getPublicUrl(storagePath);
+        final url = supabase.storage
+            .from(_storageBucket)
+            .getPublicUrl(storagePath);
 
         await supabase.from('report_photos').insert({
           'report_id': reportId,
@@ -209,12 +314,40 @@ class ReportProvider {
 
     final data = await supabase
         .from('reports')
-      .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
+        .select(
+          '*, report_photos(*), pets(name, breed, type, dominant_color, size)',
+        )
         .eq('id', reportId)
         .single();
 
     return ReportModel.fromJson(data);
   }
+
+  _GeoBounds _boundsForRadius({
+    required double latitude,
+    required double longitude,
+    required double radiusKm,
+  }) {
+    const earthRadiusKm = 6371.0;
+    final latDelta = (radiusKm / earthRadiusKm) * (180 / pi);
+    final safeCos = cos(latitude * pi / 180).abs().clamp(0.01, 1.0);
+    final lonDelta = (radiusKm / earthRadiusKm) * (180 / pi) / safeCos;
+
+    return _GeoBounds(
+      minLatitude: latitude - latDelta,
+      maxLatitude: latitude + latDelta,
+      minLongitude: longitude - lonDelta,
+      maxLongitude: longitude + lonDelta,
+    );
+  }
+
+  String _statusToString(ReportStatus status) => switch (status) {
+    ReportStatus.active => 'active',
+    ReportStatus.underReview => 'under_review',
+    ReportStatus.resolved => 'resolved',
+    ReportStatus.closed => 'closed',
+    ReportStatus.reported => 'reported',
+  };
 
   Future<ReportEntity> createLostReport({
     required String petId,
@@ -224,23 +357,55 @@ class ReportProvider {
     required DateTime occurredAt,
     String? description,
     required bool showContact,
+    List<File> photos = const [],
   }) async {
-    final reportId = await supabase.rpc(
-      'create_lost_report',
-      params: {
-        'p_pet_id': petId,
-        'p_latitude': latitude,
-        'p_longitude': longitude,
-        'p_location_description': locationDescription,
-        'p_occurred_at': occurredAt.toIso8601String(),
-        'p_description': description,
-        'p_show_contact': showContact,
-      },
-    ) as String;
+    final reportId =
+        await supabase.rpc(
+              'create_lost_report',
+              params: {
+                'p_pet_id': petId,
+                'p_latitude': latitude,
+                'p_longitude': longitude,
+                'p_location_description': locationDescription,
+                'p_occurred_at': occurredAt.toIso8601String(),
+                'p_description': description,
+                'p_show_contact': showContact,
+              },
+            )
+            as String;
+
+    final uploadedPaths = <String>[];
+
+    try {
+      for (final photo in photos) {
+        final storagePath = await _uploadReportPhoto(
+          reportId: reportId,
+          file: photo,
+        );
+        uploadedPaths.add(storagePath);
+        final url = supabase.storage
+            .from(_storageBucket)
+            .getPublicUrl(storagePath);
+
+        await supabase.from('report_photos').insert({
+          'report_id': reportId,
+          'url': url,
+        });
+      }
+    } catch (_) {
+      if (uploadedPaths.isNotEmpty) {
+        try {
+          await supabase.storage.from(_storageBucket).remove(uploadedPaths);
+        } catch (_) {}
+      }
+      rethrow;
+    }
 
     final data = await supabase
         .from('reports')
-      .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
+        .select(
+          '*, report_photos(*), pets(name, breed, type, dominant_color, size)',
+        )
         .eq('id', reportId)
         .single();
 
@@ -260,4 +425,18 @@ class ReportProvider {
     ReportPetSize.extraLarge => 'extra_large',
     null => null,
   };
+}
+
+class _GeoBounds {
+  const _GeoBounds({
+    required this.minLatitude,
+    required this.maxLatitude,
+    required this.minLongitude,
+    required this.maxLongitude,
+  });
+
+  final double minLatitude;
+  final double maxLatitude;
+  final double minLongitude;
+  final double maxLongitude;
 }
