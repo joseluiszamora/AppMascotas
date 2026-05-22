@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/service_locator.dart';
 import '../../domain/entities/report_entity.dart';
@@ -30,6 +32,43 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     });
   }
 
+  Future<void> _shareReport(ReportEntity report) async {
+    try {
+      final title = report.type == ReportType.lost
+          ? (report.petName ?? 'Mascota perdida')
+          : _foundTitle(report);
+      final dateLabel = DateFormat('d MMM y, HH:mm', 'es').format(report.occurredAt);
+      final location = report.locationDescription ?? 'Ubicación aproximada registrada';
+      final description = _descriptionText(report);
+      final shareText = StringBuffer()
+        ..writeln('Reporte de ${AppConstants.appName}')
+        ..writeln()
+        ..writeln(title)
+        ..writeln('Tipo: ${report.type == ReportType.lost ? 'Mascota perdida' : 'Mascota encontrada'}')
+        ..writeln('Estado: ${_statusLabel(report.status)}')
+        ..writeln('Ubicación aproximada: $location')
+        ..writeln('Fecha: $dateLabel')
+        ..writeln()
+        ..writeln(description)
+        ..writeln()
+        ..writeln('ID del reporte: ${report.id}');
+
+      await Share.share(
+        shareText.toString(),
+        subject: title,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No pudimos abrir las opciones para compartir.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,6 +85,21 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             color: AppColors.textPrimary,
           ),
         ),
+        actions: [
+          FutureBuilder<ReportEntity>(
+            future: _future,
+            builder: (context, snapshot) {
+              final report = snapshot.data;
+              return IconButton(
+                onPressed: report == null ? null : () => _shareReport(report),
+                tooltip: 'Compartir reporte',
+                icon: const Icon(Icons.share_rounded),
+                color: AppColors.textPrimary,
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: FutureBuilder<ReportEntity>(
         future: _future,
@@ -97,7 +151,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                         ? Image.network(
                             report.primaryPhotoUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const _ReportDetailHeroPlaceholder(),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const _ReportDetailHeroPlaceholder(),
                           )
                         : const _ReportDetailHeroPlaceholder(),
                   ),
@@ -139,6 +194,27 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                     ),
                   ),
                 ],
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => _shareReport(report),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(color: AppColors.border),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    backgroundColor: AppColors.surface,
+                  ),
+                  icon: const Icon(Icons.share_rounded),
+                  label: const Text(
+                    'Compartir reporte',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
                 const SizedBox(height: 20),
                 _InfoCard(
                   children: [

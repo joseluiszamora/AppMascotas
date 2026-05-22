@@ -20,7 +20,9 @@ class NotificationProvider {
         .limit(100);
 
     return (data as List<dynamic>)
-        .map((row) => AppNotificationModel.fromJson(row as Map<String, dynamic>))
+        .map(
+          (row) => AppNotificationModel.fromJson(row as Map<String, dynamic>),
+        )
         .toList();
   }
 
