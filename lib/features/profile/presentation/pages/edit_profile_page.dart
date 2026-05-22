@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/profile_entity.dart';
@@ -17,6 +20,7 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
+  final _imagePicker = ImagePicker();
   late final TextEditingController _firstNameCtrl;
   late final TextEditingController _lastNameCtrl;
   late final TextEditingController _phoneCtrl;
@@ -24,6 +28,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late bool _phoneVisible;
   late bool _notificationsEnabled;
   late int _radiusKm;
+  File? _selectedAvatarFile;
+  bool _removeAvatar = false;
 
   @override
   void initState() {
@@ -57,7 +63,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
       notificationsEnabled: _notificationsEnabled,
       notificationRadiusKm: _radiusKm,
     );
-    context.read<ProfileCubit>().updateProfile(updated);
+    context.read<ProfileCubit>().updateProfile(
+      updated,
+      avatarFile: _selectedAvatarFile,
+      removeAvatar: _removeAvatar,
+    );
+  }
+
+  Future<void> _pickAvatar() async {
+    final picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+      maxWidth: 1200,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() {
+      _selectedAvatarFile = File(picked.path);
+      _removeAvatar = false;
+    });
+  }
+
+  void _clearAvatarSelection() {
+    setState(() {
+      _selectedAvatarFile = null;
+      _removeAvatar = true;
+    });
+  }
+
+  String? get _currentAvatarUrl {
+    if (_removeAvatar) return null;
+    return widget.profile.avatarUrl;
   }
 
   @override
@@ -82,8 +118,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }
       },
       builder: (context, state) {
-        final isSaving =
-            state is ProfileUpdating || state is ProfileUpdateSuccess;
+        final isSaving = state is ProfileUpdating;
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -137,8 +172,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               children: [
-                // Avatar placeholder
-                _buildAvatarSection(),
+                _buildAvatarSection(isSaving),
                 const SizedBox(height: 28),
 
                 // Datos personales
@@ -198,40 +232,90 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildAvatarSection() {
+  Widget _buildAvatarSection(bool isSaving) {
     return Center(
-      child: Stack(
+      child: Column(
         children: [
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border, width: 2),
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              size: 44,
-              color: AppColors.primary,
-            ),
+          Stack(
+            children: [
+              Container(
+                width: 104,
+                height: 104,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border, width: 2),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: _selectedAvatarFile != null
+                    ? Image.file(_selectedAvatarFile!, fit: BoxFit.cover)
+                    : _currentAvatarUrl != null
+                    ? Image.network(
+                        _currentAvatarUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                              Icons.person_rounded,
+                              size: 48,
+                              color: AppColors.primary,
+                            ),
+                      )
+                    : const Icon(
+                        Icons.person_rounded,
+                        size: 48,
+                        color: AppColors.primary,
+                      ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: isSaving ? null : _pickAvatar,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isSaving ? AppColors.border : AppColors.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Container(
-              width: 28,
-              height: 28,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            alignment: WrapAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: isSaving ? null : _pickAvatar,
+                icon: const Icon(Icons.photo_library_outlined, size: 18),
+                label: Text(
+                  _currentAvatarUrl != null || _selectedAvatarFile != null
+                      ? 'Cambiar foto'
+                      : 'Subir foto',
+                ),
               ),
-              child: const Icon(
-                Icons.camera_alt_rounded,
-                size: 16,
-                color: Colors.white,
-              ),
-            ),
+              if (_currentAvatarUrl != null || _selectedAvatarFile != null)
+                TextButton.icon(
+                  onPressed: isSaving ? null : _clearAvatarSelection,
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                  label: const Text('Quitar'),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                ),
+            ],
+          ),
+          const Text(
+            'Usa una foto clara para que la comunidad te identifique mejor.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -311,7 +395,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         Switch.adaptive(
           value: _phoneVisible,
           onChanged: disabled ? null : (v) => setState(() => _phoneVisible = v),
-          activeColor: AppColors.primary,
+          activeThumbColor: AppColors.primary,
+          activeTrackColor: AppColors.primaryLight,
         ),
         const SizedBox(width: 8),
         const Text(
@@ -399,7 +484,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             onChanged: disabled
                 ? null
                 : (v) => setState(() => _notificationsEnabled = v),
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
+            activeTrackColor: AppColors.primaryLight,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 4,

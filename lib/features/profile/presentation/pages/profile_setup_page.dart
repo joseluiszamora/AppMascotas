@@ -71,8 +71,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       },
       child: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) {
-          final isSaving =
-              state is ProfileUpdating || state is ProfileUpdateSuccess;
+          final isSaving = state is ProfileUpdating;
 
           return Scaffold(
             backgroundColor: AppColors.background,

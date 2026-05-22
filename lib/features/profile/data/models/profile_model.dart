@@ -17,13 +17,16 @@ class ProfileModel {
     );
   }
 
-  static Map<String, dynamic> toUpdateJson(ProfileEntity profile) {
+  static Map<String, dynamic> toUpdateJson(
+    ProfileEntity profile, {
+    String? avatarUrl,
+  }) {
     return {
       'first_name': profile.firstName,
       'last_name': profile.lastName,
       'phone': profile.phone,
       'phone_visible': profile.phoneVisible,
-      'avatar_url': profile.avatarUrl,
+      'avatar_url': avatarUrl,
       'pet_preferences': profile.petPreferences.name,
       'notifications_enabled': profile.notificationsEnabled,
       'notification_radius_km': profile.notificationRadiusKm,

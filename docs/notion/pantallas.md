@@ -65,6 +65,7 @@ Componentes:
 Acciones:
 
 - Editar datos.
+- Subir o cambiar foto de perfil.
 - Cambiar preferencias.
 - Activar o desactivar notificaciones.
 - Cerrar sesión.

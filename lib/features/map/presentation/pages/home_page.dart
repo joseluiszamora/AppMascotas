@@ -459,7 +459,10 @@ class _NotificationsButtonState extends State<_NotificationsButton> {
                       right: -2,
                       child: Container(
                         constraints: const BoxConstraints(minWidth: 18),
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.error,
                           borderRadius: BorderRadius.circular(999),
@@ -622,12 +625,16 @@ class _RecentReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = DateFormat('d MMM, HH:mm', 'es').format(report.occurredAt);
+    final dateLabel = DateFormat(
+      'd MMM, HH:mm',
+      'es',
+    ).format(report.occurredAt);
     final isLost = report.type == ReportType.lost;
     final title = isLost
         ? (report.petName ?? 'Mascota perdida')
         : _foundTitle(report);
-    final subtitle = report.locationDescription ?? 'Ubicación aproximada registrada';
+    final subtitle =
+        report.locationDescription ?? 'Ubicación aproximada registrada';
     final badgeText = isLost ? 'Perdida' : 'Encontrada';
     final badgeColor = isLost ? AppColors.lostPet : AppColors.foundPet;
     final badgeBg = isLost ? AppColors.pastelPink : AppColors.pastelGreen;
@@ -658,7 +665,8 @@ class _RecentReportCard extends StatelessWidget {
                   ? Image.network(
                       report.primaryPhotoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, error, stackTrace) => const _RecentReportPlaceholder(),
+                      errorBuilder: (_, error, stackTrace) =>
+                          const _RecentReportPlaceholder(),
                     )
                   : const _RecentReportPlaceholder(),
             ),
@@ -669,7 +677,10 @@ class _RecentReportCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: badgeBg,
                     borderRadius: BorderRadius.circular(999),
@@ -694,7 +705,8 @@ class _RecentReportCard extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                if (report.petBreed != null && report.petBreed!.trim().isNotEmpty)
+                if (report.petBreed != null &&
+                    report.petBreed!.trim().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 3),
                     child: Text(
@@ -752,11 +764,7 @@ class _RecentReportPlaceholder extends StatelessWidget {
     return Container(
       color: AppColors.pastelPink,
       alignment: Alignment.center,
-      child: const Icon(
-        Icons.pets_rounded,
-        color: AppColors.lostPet,
-        size: 30,
-      ),
+      child: const Icon(Icons.pets_rounded, color: AppColors.lostPet, size: 30),
     );
   }
 }
@@ -916,11 +924,23 @@ class _ProfileTabState extends State<_ProfileTab> {
                         color: AppColors.primaryLight,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.person_rounded,
-                        size: 32,
-                        color: AppColors.primary,
-                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: profile?.avatarUrl != null
+                          ? Image.network(
+                              profile!.avatarUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                    Icons.person_rounded,
+                                    size: 32,
+                                    color: AppColors.primary,
+                                  ),
+                            )
+                          : const Icon(
+                              Icons.person_rounded,
+                              size: 32,
+                              color: AppColors.primary,
+                            ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(

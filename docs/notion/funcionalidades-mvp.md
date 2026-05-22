@@ -26,7 +26,7 @@ Etapa: 1
 
 Funcionalidades:
 
-- Foto de perfil.
+- Foto de perfil con subida y edición.
 - Nombres.
 - Apellidos.
 - Teléfono.

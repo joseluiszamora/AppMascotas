@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/usecases/get_profile.dart';
@@ -26,13 +29,21 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  Future<void> updateProfile(ProfileEntity profile) async {
+  Future<void> updateProfile(
+    ProfileEntity profile, {
+    File? avatarFile,
+    bool removeAvatar = false,
+  }) async {
     final current = state is ProfileLoaded
         ? (state as ProfileLoaded).profile
         : profile;
     emit(ProfileUpdating(current));
     try {
-      final updated = await _updateProfile(profile);
+      final updated = await _updateProfile(
+        profile,
+        avatarFile: avatarFile,
+        removeAvatar: removeAvatar,
+      );
       emit(ProfileUpdateSuccess(updated));
     } catch (e) {
       emit(ProfileError(_mapError(e)));
@@ -43,6 +54,17 @@ class ProfileCubit extends Cubit<ProfileState> {
   void resetProfile() => emit(const ProfileInitial());
 
   String _mapError(Object e) {
+    if (e is StorageException) {
+      final message = e.message.toLowerCase();
+      if (message.contains('formato de imagen no soportado')) {
+        return 'Formato de imagen no soportado. Usa JPG, PNG, WEBP, GIF o HEIC.';
+      }
+      if (message.contains('mime type') || message.contains('invalid')) {
+        return 'La imagen seleccionada no es compatible con el storage configurado.';
+      }
+      return 'No pudimos subir la foto de perfil. Intenta de nuevo.';
+    }
+
     final msg = e.toString().toLowerCase();
     if (msg.contains('network') || msg.contains('socket')) {
       return 'Sin conexión. Verifica tu internet e intenta de nuevo.';

@@ -111,7 +111,22 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.profileEdit,
           builder: (context, state) {
-            final profile = state.extra as ProfileEntity;
+            final profile =
+                (state.extra as ProfileEntity?) ??
+                switch (profileCubit.state) {
+                  ProfileLoaded(:final profile) => profile,
+                  ProfileUpdating(:final profile) => profile,
+                  ProfileUpdateSuccess(:final profile) => profile,
+                  _ => null,
+                };
+
+            if (profile == null) {
+              return const Scaffold(
+                backgroundColor: Colors.white,
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
             return EditProfilePage(profile: profile);
           },
         ),
@@ -148,9 +163,8 @@ class AppRouter {
         ),
         GoRoute(
           path: '/reports/:reportId',
-          builder: (context, state) => ReportDetailScreen(
-            reportId: state.pathParameters['reportId']!,
-          ),
+          builder: (context, state) =>
+              ReportDetailScreen(reportId: state.pathParameters['reportId']!),
         ),
       ],
     );

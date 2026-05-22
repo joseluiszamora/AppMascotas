@@ -38,6 +38,12 @@ supabase/
   functions/          # Edge Functions (Deno/TypeScript)
 ```
 
+Buckets de Storage usados por el MVP:
+
+- `pet-photos` para fotos de mascotas.
+- `report-photos` para fotos de reportes.
+- `profile-avatars` para foto de perfil del usuario.
+
 ### Patrón de capas
 
 ```
@@ -118,6 +124,7 @@ features/pets/
 
 - Todo cambio estructural → migración en `supabase/migrations/`.
 - Toda tabla pública → **RLS habilitado**.
+- Todo bucket usado por la app debe configurarse por migración y con políticas sobre `storage.objects`.
 - PK: UUID. Columnas obligatorias: `created_at`, `updated_at`.
 - Toda FK importante → índice.
 - Nunca modificar la DB directamente desde el dashboard.
