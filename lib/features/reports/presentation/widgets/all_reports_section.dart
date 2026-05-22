@@ -1,38 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/service_locator.dart';
 import '../../domain/entities/report_entity.dart';
-import '../../domain/usecases/get_my_reports.dart';
+import '../../domain/usecases/get_all_reports.dart';
 import 'report_list_components.dart';
 import '../utils/report_actions.dart';
 
-class MyReportsSection extends StatefulWidget {
-  const MyReportsSection({super.key, this.refreshToken = 0});
+class AllReportsSection extends StatefulWidget {
+  const AllReportsSection({super.key, this.refreshToken = 0});
 
   final int refreshToken;
 
   @override
-  State<MyReportsSection> createState() => _MyReportsSectionState();
+  State<AllReportsSection> createState() => _AllReportsSectionState();
 }
 
-class _MyReportsSectionState extends State<MyReportsSection> {
+class _AllReportsSectionState extends State<AllReportsSection> {
   late Future<List<ReportEntity>> _future;
 
   bool _includeLost = true;
   bool _includeFound = true;
   ReportPetType? _petType;
   ReportStatus? _status;
+  ReportListSortOrder _sortOrder = ReportListSortOrder.newest;
   String _query = '';
+  double? _userLatitude;
+  double? _userLongitude;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _future = _loadReports();
+    _currentUserId = sl<SupabaseClient>().auth.currentUser?.id;
   }
 
   @override
-  void didUpdateWidget(covariant MyReportsSection oldWidget) {
+  void didUpdateWidget(covariant AllReportsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshToken != widget.refreshToken) {
       _reload();
@@ -40,7 +47,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
   }
 
   Future<List<ReportEntity>> _loadReports() {
-    return sl<GetMyReports>()();
+    return sl<GetAllReports>()();
   }
 
   void _reload() {
@@ -55,13 +62,14 @@ class _MyReportsSectionState extends State<MyReportsSection> {
     if (_petType != null) total++;
     if (_status != null) total++;
     if (_query.trim().isNotEmpty) total++;
+    if (_sortOrder != ReportListSortOrder.newest) total++;
     return total;
   }
 
   List<ReportEntity> _applyFilters(List<ReportEntity> reports) {
     final query = _query.trim().toLowerCase();
 
-    return reports.where((report) {
+    final filtered = reports.where((report) {
       if (!_includeLost && report.type == ReportType.lost) {
         return false;
       }
@@ -93,6 +101,97 @@ class _MyReportsSectionState extends State<MyReportsSection> {
 
       return haystack.contains(query);
     }).toList();
+
+    if (_sortOrder == ReportListSortOrder.newest) {
+      filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    } else if (_sortOrder == ReportListSortOrder.oldest) {
+      filtered.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    } else if (_userLatitude != null && _userLongitude != null) {
+      filtered.sort((a, b) => _distanceKm(a).compareTo(_distanceKm(b)));
+    } else {
+      filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    }
+
+    return filtered;
+  }
+
+  double _distanceKm(ReportEntity report) {
+    if (_userLatitude == null || _userLongitude == null) {
+      return double.infinity;
+    }
+
+    final distanceMeters = Geolocator.distanceBetween(
+      _userLatitude!,
+      _userLongitude!,
+      report.approximateLatitude,
+      report.approximateLongitude,
+    );
+
+    return distanceMeters / 1000;
+  }
+
+  String _distanceLabel(ReportEntity report) {
+    final distance = _distanceKm(report);
+    if (distance == double.infinity) {
+      return 'Sin ubicación actual';
+    }
+    if (distance < 1) {
+      return '${(distance * 1000).round()} m de ti';
+    }
+    return '${distance.toStringAsFixed(1)} km de ti';
+  }
+
+  Future<bool> _ensureSortLocation() async {
+    if (_userLatitude != null && _userLongitude != null) {
+      return true;
+    }
+
+    try {
+      final isEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!isEnabled) {
+        _showMessage('Activa la ubicación para ordenar por proximidad.');
+        return false;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _showMessage(
+          'No pudimos acceder a tu ubicación para ordenar por proximidad.',
+        );
+        return false;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      );
+
+      _userLatitude = position.latitude;
+      _userLongitude = position.longitude;
+      return true;
+    } catch (_) {
+      _showMessage(
+        'No pudimos obtener tu ubicación para ordenar por proximidad.',
+      );
+      return false;
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _openFilters() async {
@@ -101,22 +200,35 @@ class _MyReportsSectionState extends State<MyReportsSection> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ReportListFiltersSheet(
-        title: 'Filtros de tus reportes',
+        title: 'Filtros del listado principal',
         includeLost: _includeLost,
         includeFound: _includeFound,
         petType: _petType,
         status: _status,
         query: _query,
+        sortOrder: _sortOrder,
+        showSortField: true,
       ),
     );
 
     if (result == null || !mounted) return;
+    final nextSortOrder = result.sortOrder ?? ReportListSortOrder.newest;
+    if (nextSortOrder == ReportListSortOrder.proximity) {
+      final hasLocation = await _ensureSortLocation();
+      if (!hasLocation) {
+        setState(() {
+          _sortOrder = ReportListSortOrder.newest;
+        });
+        return;
+      }
+    }
     setState(() {
       _includeLost = result.includeLost;
       _includeFound = result.includeFound;
       _petType = result.petType;
       _status = result.status;
       _query = result.query;
+      _sortOrder = nextSortOrder;
     });
   }
 
@@ -126,6 +238,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
       _includeFound = true;
       _petType = null;
       _status = null;
+      _sortOrder = ReportListSortOrder.newest;
       _query = '';
     });
   }
@@ -143,7 +256,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tus reportes',
+                      'Todos los reportes',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -152,7 +265,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Consulta el historial de reportes publicados por tu cuenta.',
+                      'Consulta reportes tuyos y de la comunidad en un solo lugar.',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
@@ -183,7 +296,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              ReportListSummaryChip(label: 'Solo tuyos'),
+              ReportListSummaryChip(label: reportListSortLabel(_sortOrder)),
               ReportListSummaryChip(
                 label: _includeLost && _includeFound
                     ? 'Perdidas y encontradas'
@@ -219,8 +332,9 @@ class _MyReportsSectionState extends State<MyReportsSection> {
               if (snapshot.hasError) {
                 return ReportListFeedbackState(
                   icon: Icons.wifi_off_rounded,
-                  title: 'No pudimos cargar tus reportes',
-                  message: 'Intenta de nuevo para actualizar tu historial.',
+                  title: 'No pudimos cargar los reportes',
+                  message:
+                      'Intenta de nuevo para actualizar el listado general.',
                   actionLabel: 'Reintentar',
                   onAction: _reload,
                 );
@@ -230,9 +344,9 @@ class _MyReportsSectionState extends State<MyReportsSection> {
               if (reports.isEmpty) {
                 return ReportListFeedbackState(
                   icon: Icons.assignment_outlined,
-                  title: 'Aún no has publicado reportes',
+                  title: 'Aún no hay reportes disponibles',
                   message:
-                      'Cuando crees reportes perdidos o encontrados aparecerán aquí.',
+                      'Cuando la comunidad publique reportes aparecerán aquí.',
                   actionLabel: 'Actualizar',
                   onAction: _reload,
                 );
@@ -255,16 +369,27 @@ class _MyReportsSectionState extends State<MyReportsSection> {
                 itemCount: filteredReports.length,
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 12),
-                itemBuilder: (context, index) => ReportListCard(
-                  report: filteredReports[index],
-                  extraBadges: const [
-                    ReportListBadgeData(
-                      label: 'Tuyo',
-                      color: AppColors.primary,
-                      background: AppColors.pastelBlue,
-                    ),
-                  ],
-                ),
+                itemBuilder: (context, index) {
+                  final report = filteredReports[index];
+                  final isMine = report.reporterId == _currentUserId;
+                  return ReportListCard(
+                    report: report,
+                    secondaryInfo: _sortOrder == ReportListSortOrder.proximity
+                        ? _distanceLabel(report)
+                        : null,
+                    extraBadges: [
+                      ReportListBadgeData(
+                        label: isMine ? 'Tuyo' : 'Comunidad',
+                        color: isMine
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        background: isMine
+                            ? AppColors.pastelBlue
+                            : AppColors.border,
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),

@@ -129,6 +129,20 @@ class ReportProvider {
         .toList();
   }
 
+  Future<List<ReportEntity>> getAllReports({int limit = 200}) async {
+    final data = await supabase
+        .from('reports')
+        .select(
+          '*, report_photos(*), pets(name, breed, type, dominant_color, size)',
+        )
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    return (data as List<dynamic>)
+        .map((row) => ReportModel.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<ReportEntity>> getMyReports({int limit = 100}) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {

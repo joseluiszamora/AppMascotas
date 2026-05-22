@@ -26,6 +26,11 @@ class ReportRepositoryImpl implements ReportRepository {
   }
 
   @override
+  Future<List<ReportEntity>> getAllReports({int limit = 200}) {
+    return _provider.getAllReports(limit: limit);
+  }
+
+  @override
   Future<List<ReportEntity>> getMyReports({int limit = 100}) {
     return _provider.getMyReports(limit: limit);
   }

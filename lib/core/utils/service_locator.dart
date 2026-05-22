@@ -35,6 +35,7 @@ import '../../features/reports/data/repositories/report_repository_impl.dart';
 import '../../features/reports/domain/repositories/report_repository.dart';
 import '../../features/reports/domain/usecases/create_found_report.dart';
 import '../../features/reports/domain/usecases/create_lost_report.dart';
+import '../../features/reports/domain/usecases/get_all_reports.dart';
 import '../../features/reports/domain/usecases/get_map_reports.dart';
 import '../../features/reports/domain/usecases/get_my_reports.dart';
 import '../../features/reports/domain/usecases/get_report_by_id.dart';
@@ -140,6 +141,7 @@ Future<void> setupServiceLocator() async {
   // Reports — Use Cases
   sl.registerLazySingleton(() => CreateFoundReport(sl<ReportRepository>()));
   sl.registerLazySingleton(() => CreateLostReport(sl<ReportRepository>()));
+  sl.registerLazySingleton(() => GetAllReports(sl<ReportRepository>()));
   sl.registerLazySingleton(() => GetMapReports(sl<ReportRepository>()));
   sl.registerLazySingleton(() => GetMyReports(sl<ReportRepository>()));
   sl.registerLazySingleton(() => GetReportById(sl<ReportRepository>()));

@@ -13,6 +13,7 @@ import '../../../../core/utils/service_locator.dart';
 import '../../../reports/domain/entities/report_entity.dart';
 import '../../../reports/domain/entities/report_map_query.dart';
 import '../../../reports/domain/usecases/get_map_reports.dart';
+import '../../../reports/presentation/widgets/all_reports_section.dart';
 import '../../../reports/presentation/widgets/my_reports_section.dart';
 import '../../../reports/presentation/utils/report_actions.dart';
 
@@ -27,7 +28,7 @@ class ReportsMapPage extends StatefulWidget {
 
 enum _MapViewMode { markers, incidence }
 
-enum _ReportsSection { map, mine }
+enum _ReportsSection { all, map, mine }
 
 class _ReportsMapPageState extends State<ReportsMapPage> {
   static const _defaultCenter = LatLng(4.7110, -74.0721);
@@ -40,7 +41,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
   bool _isLocating = false;
   bool _hasPendingAreaSearch = false;
   _MapViewMode _viewMode = _MapViewMode.markers;
-  _ReportsSection _section = _ReportsSection.map;
+  _ReportsSection _section = _ReportsSection.all;
 
   bool _includeLost = true;
   bool _includeFound = true;
@@ -320,7 +321,9 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _section == _ReportsSection.map
+                    _section == _ReportsSection.all
+                        ? 'Listado principal con reportes tuyos y de la comunidad'
+                        : _section == _ReportsSection.map
                         ? 'OSM · reportes activos cercanos'
                         : 'Tus reportes con filtros por tipo, mascota y estado',
                     style: const TextStyle(
@@ -335,6 +338,11 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: SegmentedButton<_ReportsSection>(
                 segments: const [
+                  ButtonSegment<_ReportsSection>(
+                    value: _ReportsSection.all,
+                    icon: Icon(Icons.view_list_rounded),
+                    label: Text('Todos'),
+                  ),
                   ButtonSegment<_ReportsSection>(
                     value: _ReportsSection.map,
                     icon: Icon(Icons.map_rounded),
@@ -367,6 +375,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
               child: IndexedStack(
                 index: _section.index,
                 children: [
+                  AllReportsSection(refreshToken: widget.refreshToken),
                   _buildMapSection(),
                   MyReportsSection(refreshToken: widget.refreshToken),
                 ],

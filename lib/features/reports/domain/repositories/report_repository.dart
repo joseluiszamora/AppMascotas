@@ -10,6 +10,8 @@ abstract class ReportRepository {
 
   Future<List<ReportEntity>> getRecentReports({int limit = 5});
 
+  Future<List<ReportEntity>> getAllReports({int limit = 200});
+
   Future<List<ReportEntity>> getMyReports({int limit = 100});
 
   Future<ReportEntity> createFoundReport({
