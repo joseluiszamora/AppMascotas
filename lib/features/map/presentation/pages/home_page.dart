@@ -33,6 +33,19 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   int _mapRefreshKey = 0;
 
+  void _openPetsSection() {
+    setState(() {
+      _currentIndex = 1;
+    });
+  }
+
+  void _openReportsSection() {
+    setState(() {
+      _currentIndex = 2;
+      _mapRefreshKey++;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
@@ -47,7 +60,11 @@ class _HomePageState extends State<HomePage> {
               body: IndexedStack(
                 index: _currentIndex,
                 children: [
-                  _HomeTab(user: user),
+                  _HomeTab(
+                    user: user,
+                    onOpenPetsSection: _openPetsSection,
+                    onOpenReportsSection: _openReportsSection,
+                  ),
                   const PetsPage(),
                   ReportsMapPage(refreshToken: _mapRefreshKey),
                   _ProfileTab(user: user, isAuthLoading: isLoading),
@@ -81,9 +98,15 @@ class _HomePageState extends State<HomePage> {
 // Tab 0: Inicio
 // ─────────────────────────────────────────────
 class _HomeTab extends StatefulWidget {
-  const _HomeTab({required this.user});
+  const _HomeTab({
+    required this.user,
+    required this.onOpenPetsSection,
+    required this.onOpenReportsSection,
+  });
 
   final UserEntity? user;
+  final VoidCallback onOpenPetsSection;
+  final VoidCallback onOpenReportsSection;
 
   @override
   State<_HomeTab> createState() => _HomeTabState();
@@ -126,7 +149,7 @@ class _HomeTabState extends State<_HomeTab> {
             const SizedBox(height: 24),
             _buildHeader(firstName),
             const SizedBox(height: 24),
-            const _HeroBanner(),
+            _HeroBanner(onCreateReportTap: _openLostReportForm),
             const SizedBox(height: 28),
             _buildSectionTitle('¿Qué necesitas hacer?'),
             const SizedBox(height: 16),
@@ -201,6 +224,15 @@ class _HomeTabState extends State<_HomeTab> {
           sublabel: 'Ver y gestionar',
           bgColor: AppColors.pastelYellow,
           iconColor: AppColors.primary,
+          onTap: widget.onOpenPetsSection,
+        ),
+        _QuickActionCard(
+          icon: Icons.feed_rounded,
+          label: 'Reportes',
+          sublabel: 'Explora la comunidad',
+          bgColor: AppColors.pastelBlue,
+          iconColor: Color(0xFF4488EE),
+          onTap: widget.onOpenReportsSection,
         ),
         _QuickActionCard(
           icon: Icons.search_off_rounded,
@@ -218,13 +250,6 @@ class _HomeTabState extends State<_HomeTab> {
           iconColor: AppColors.foundPet,
           onTap: _openFoundReportForm,
         ),
-        const _QuickActionCard(
-          icon: Icons.map_rounded,
-          label: 'Ver mapa',
-          sublabel: 'Reportes cercanos',
-          bgColor: AppColors.pastelBlue,
-          iconColor: Color(0xFF4488EE),
-        ),
       ],
     );
   }
@@ -234,7 +259,9 @@ class _HomeTabState extends State<_HomeTab> {
 // Hero banner
 // ─────────────────────────────────────────────
 class _HeroBanner extends StatelessWidget {
-  const _HeroBanner();
+  const _HeroBanner({required this.onCreateReportTap});
+
+  final VoidCallback onCreateReportTap;
 
   @override
   Widget build(BuildContext context) {
@@ -303,21 +330,28 @@ class _HeroBanner extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onCreateReportTap,
                           borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: const Text(
-                          'Crear reporte',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryDark,
+                          child: Ink(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: const Text(
+                              'Crear reporte',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryDark,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -926,7 +960,7 @@ class _BottomNav extends StatelessWidget {
   static const _items = [
     (icon: Icons.home_rounded, label: 'Inicio'),
     (icon: Icons.pets_rounded, label: 'Mascotas'),
-    (icon: Icons.map_rounded, label: 'Mapa'),
+    (icon: Icons.feed_rounded, label: 'Reportes'),
     (icon: Icons.person_rounded, label: 'Perfil'),
   ];
 

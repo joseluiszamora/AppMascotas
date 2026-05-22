@@ -59,14 +59,13 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
   void initState() {
     super.initState();
     _future = _loadReports();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _centerOnCurrentLocation());
   }
 
   @override
   void didUpdateWidget(covariant ReportsMapPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshToken != widget.refreshToken) {
-      _reloadReports();
+      _centerOnCurrentLocation();
     }
   }
 
