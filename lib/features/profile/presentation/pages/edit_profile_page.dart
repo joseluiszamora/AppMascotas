@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -78,8 +79,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
     if (picked == null || !mounted) return;
 
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: picked.path,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      compressQuality: 90,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Recortar foto',
+          toolbarColor: AppColors.primary,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.square,
+          lockAspectRatio: true,
+          hideBottomControls: false,
+          cropFrameColor: AppColors.primary,
+          cropGridColor: AppColors.primaryLight,
+          activeControlsWidgetColor: AppColors.primary,
+        ),
+        IOSUiSettings(
+          title: 'Recortar foto',
+          aspectRatioLockEnabled: true,
+          resetAspectRatioEnabled: false,
+          rotateButtonsHidden: false,
+          rotateClockwiseButtonHidden: false,
+        ),
+      ],
+    );
+    if (cropped == null || !mounted) return;
+
     setState(() {
-      _selectedAvatarFile = File(picked.path);
+      _selectedAvatarFile = File(cropped.path);
       _removeAvatar = false;
     });
   }
