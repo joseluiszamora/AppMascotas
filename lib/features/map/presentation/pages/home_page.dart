@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/service_locator.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../../auth/presentation/blocs/auth/auth_event.dart';
@@ -12,6 +14,8 @@ import '../../../pets/presentation/pages/pets_page.dart';
 import '../../../profile/domain/entities/profile_entity.dart';
 import '../../../profile/presentation/blocs/profile_cubit.dart';
 import '../../../profile/presentation/blocs/profile_state.dart';
+import '../../../reports/domain/entities/report_entity.dart';
+import '../../../reports/domain/usecases/get_recent_reports.dart';
 
 // ─────────────────────────────────────────────
 // Shell principal con bottom navigation
@@ -68,14 +72,28 @@ class _HomePageState extends State<HomePage> {
 // ─────────────────────────────────────────────
 // Tab 0: Inicio
 // ─────────────────────────────────────────────
-class _HomeTab extends StatelessWidget {
+class _HomeTab extends StatefulWidget {
   const _HomeTab({required this.user});
 
   final UserEntity? user;
 
   @override
+  State<_HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<_HomeTab> {
+  int _reportsRefreshKey = 0;
+
+  Future<void> _openLostReportForm() async {
+    final created = await context.push<bool>(AppRoutes.lostReportForm);
+    if (created == true && mounted) {
+      setState(() => _reportsRefreshKey++);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final firstName = user?.name?.split(' ').first;
+    final firstName = widget.user?.name?.split(' ').first;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -90,11 +108,11 @@ class _HomeTab extends StatelessWidget {
             const SizedBox(height: 28),
             _buildSectionTitle('¿Qué necesitas hacer?'),
             const SizedBox(height: 16),
-            _buildQuickActions(context),
+            _buildQuickActions(),
             const SizedBox(height: 28),
             _buildSectionTitle('Reportes recientes'),
             const SizedBox(height: 16),
-            const _EmptyReportsCard(),
+            _RecentReportsSection(key: ValueKey(_reportsRefreshKey)),
             const SizedBox(height: 24),
           ],
         ),
@@ -156,7 +174,7 @@ class _HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions() {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -164,7 +182,7 @@ class _HomeTab extends StatelessWidget {
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       childAspectRatio: 1.1,
-      children: const [
+      children: [
         _QuickActionCard(
           icon: Icons.pets_rounded,
           label: 'Mis Mascotas',
@@ -178,15 +196,16 @@ class _HomeTab extends StatelessWidget {
           sublabel: 'Avisa a la comunidad',
           bgColor: AppColors.pastelPink,
           iconColor: AppColors.lostPet,
+          onTap: _openLostReportForm,
         ),
-        _QuickActionCard(
+        const _QuickActionCard(
           icon: Icons.favorite_rounded,
           label: 'Reportar encontrada',
           sublabel: 'Ayuda al dueño',
           bgColor: AppColors.pastelGreen,
           iconColor: AppColors.foundPet,
         ),
-        _QuickActionCard(
+        const _QuickActionCard(
           icon: Icons.map_rounded,
           label: 'Ver mapa',
           sublabel: 'Reportes cercanos',
@@ -312,6 +331,7 @@ class _QuickActionCard extends StatelessWidget {
     required this.sublabel,
     required this.bgColor,
     required this.iconColor,
+    this.onTap,
   });
 
   final IconData icon;
@@ -319,13 +339,12 @@ class _QuickActionCard extends StatelessWidget {
   final String sublabel;
   final Color bgColor;
   final Color iconColor;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // TODO: navegar a la pantalla correspondiente
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
@@ -381,8 +400,107 @@ class _QuickActionCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-// Placeholder: sin reportes recientes
+// Reportes recientes
 // ─────────────────────────────────────────────
+class _RecentReportsSection extends StatefulWidget {
+  const _RecentReportsSection({super.key});
+
+  @override
+  State<_RecentReportsSection> createState() => _RecentReportsSectionState();
+}
+
+class _RecentReportsSectionState extends State<_RecentReportsSection> {
+  late Future<List<ReportEntity>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _loadReports();
+  }
+
+  Future<List<ReportEntity>> _loadReports() {
+    return sl<GetRecentReports>()(limit: 5);
+  }
+
+  void _retry() {
+    setState(() {
+      _future = _loadReports();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<ReportEntity>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.wifi_off_rounded,
+                  size: 40,
+                  color: AppColors.textHint,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'No pudimos cargar los reportes recientes',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextButton(onPressed: _retry, child: const Text('Reintentar')),
+              ],
+            ),
+          );
+        }
+
+        final reports = snapshot.data ?? const <ReportEntity>[];
+        if (reports.isEmpty) {
+          return const _EmptyReportsCard();
+        }
+
+        return Column(
+          children: reports
+              .map(
+                (report) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _RecentReportCard(report: report),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
 class _EmptyReportsCard extends StatelessWidget {
   const _EmptyReportsCard();
 
@@ -401,7 +519,7 @@ class _EmptyReportsCard extends StatelessWidget {
           Icon(Icons.search_rounded, size: 40, color: AppColors.textHint),
           SizedBox(height: 12),
           Text(
-            'Sin reportes por aquí',
+            'Sin reportes recientes',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -410,11 +528,151 @@ class _EmptyReportsCard extends StatelessWidget {
           ),
           SizedBox(height: 4),
           Text(
-            'Los reportes cercanos aparecerán aquí.',
+            'Cuando la comunidad publique reportes activos aparecerán aquí.',
             style: TextStyle(fontSize: 13, color: AppColors.textHint),
             textAlign: TextAlign.center,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RecentReportCard extends StatelessWidget {
+  const _RecentReportCard({required this.report});
+
+  final ReportEntity report;
+
+  @override
+  Widget build(BuildContext context) {
+    final dateLabel = DateFormat('d MMM, HH:mm', 'es').format(report.occurredAt);
+    final title = report.petName ?? 'Mascota perdida';
+    final subtitle = report.locationDescription ?? 'Ubicación aproximada registrada';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: SizedBox(
+              width: 76,
+              height: 76,
+              child: report.primaryPhotoUrl != null
+                  ? Image.network(
+                      report.primaryPhotoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, error, stackTrace) => const _RecentReportPlaceholder(),
+                    )
+                  : const _RecentReportPlaceholder(),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.pastelPink,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Text(
+                    'Perdida',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.lostPet,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                if (report.petBreed != null && report.petBreed!.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      report.petBreed!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.schedule_rounded,
+                      size: 14,
+                      color: AppColors.textHint,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      dateLabel,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textHint,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecentReportPlaceholder extends StatelessWidget {
+  const _RecentReportPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.pastelPink,
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.pets_rounded,
+        color: AppColors.lostPet,
+        size: 30,
       ),
     );
   }

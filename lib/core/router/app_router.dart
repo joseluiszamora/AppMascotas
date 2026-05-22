@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../utils/service_locator.dart';
 import '../../features/auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../features/auth/presentation/blocs/auth/auth_state.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -13,6 +14,8 @@ import '../../features/profile/presentation/blocs/profile_cubit.dart';
 import '../../features/profile/presentation/blocs/profile_state.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/profile_setup_page.dart';
+import '../../features/reports/presentation/blocs/report_form/report_form_cubit.dart';
+import '../../features/reports/presentation/screens/lost_report_form_screen.dart';
 
 class AppRoutes {
   static const login = '/login';
@@ -20,6 +23,7 @@ class AppRoutes {
   static const profileSetup = '/profile-setup';
   static const profileEdit = '/profile-edit';
   static const petForm = '/pets/form';
+  static const lostReportForm = '/reports/lost/form';
 }
 
 class AppRouter {
@@ -108,6 +112,16 @@ class AppRouter {
           builder: (context, state) {
             final pet = state.extra as PetEntity?;
             return PetFormScreen(pet: pet);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.lostReportForm,
+          builder: (context, state) {
+            final initialPetId = state.extra as String?;
+            return BlocProvider<ReportFormCubit>(
+              create: (_) => sl<ReportFormCubit>(),
+              child: LostReportFormScreen(initialPetId: initialPetId),
+            );
           },
         ),
       ],

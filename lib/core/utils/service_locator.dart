@@ -23,6 +23,12 @@ import '../../features/pets/domain/usecases/delete_pet.dart';
 import '../../features/pets/domain/usecases/get_my_pets.dart';
 import '../../features/pets/domain/usecases/update_pet.dart';
 import '../../features/pets/presentation/blocs/pet_cubit.dart';
+import '../../features/reports/data/providers/report_provider.dart';
+import '../../features/reports/data/repositories/report_repository_impl.dart';
+import '../../features/reports/domain/repositories/report_repository.dart';
+import '../../features/reports/domain/usecases/create_lost_report.dart';
+import '../../features/reports/domain/usecases/get_recent_reports.dart';
+import '../../features/reports/presentation/blocs/report_form/report_form_cubit.dart';
 import '../../features/profile/presentation/blocs/profile_cubit.dart';
 
 final GetIt sl = GetIt.instance;
@@ -109,6 +115,26 @@ Future<void> setupServiceLocator() async {
       updatePet: sl<UpdatePet>(),
       deletePet: sl<DeletePet>(),
       repository: sl<PetRepository>(),
+    ),
+  );
+
+  // Reports — Data
+  sl.registerLazySingleton<ReportProvider>(
+    () => ReportProvider(supabase: sl<SupabaseClient>()),
+  );
+  sl.registerLazySingleton<ReportRepository>(
+    () => ReportRepositoryImpl(sl<ReportProvider>()),
+  );
+
+  // Reports — Use Cases
+  sl.registerLazySingleton(() => CreateLostReport(sl<ReportRepository>()));
+  sl.registerLazySingleton(() => GetRecentReports(sl<ReportRepository>()));
+
+  // Reports — Cubit (local al formulario de reporte)
+  sl.registerFactory(
+    () => ReportFormCubit(
+      getMyPets: sl<GetMyPets>(),
+      createLostReport: sl<CreateLostReport>(),
     ),
   );
 }
