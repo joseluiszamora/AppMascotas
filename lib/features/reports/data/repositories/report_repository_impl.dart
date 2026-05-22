@@ -10,6 +10,16 @@ class ReportRepositoryImpl implements ReportRepository {
   final ReportProvider _provider;
 
   @override
+  Future<ReportEntity> getReportById(String reportId) {
+    return _provider.getReportById(reportId);
+  }
+
+  @override
+  Future<List<ReportEntity>> getMapReports() {
+    return _provider.getMapReports();
+  }
+
+  @override
   Future<List<ReportEntity>> getRecentReports({int limit = 5}) {
     return _provider.getRecentReports(limit: limit);
   }

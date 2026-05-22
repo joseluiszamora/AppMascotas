@@ -11,11 +11,13 @@ import '../../../auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../../auth/presentation/blocs/auth/auth_event.dart';
 import '../../../auth/presentation/blocs/auth/auth_state.dart';
 import '../../../pets/presentation/pages/pets_page.dart';
+import '../../../notifications/domain/usecases/get_unread_notifications_count.dart';
 import '../../../profile/domain/entities/profile_entity.dart';
 import '../../../profile/presentation/blocs/profile_cubit.dart';
 import '../../../profile/presentation/blocs/profile_state.dart';
 import '../../../reports/domain/entities/report_entity.dart';
 import '../../../reports/domain/usecases/get_recent_reports.dart';
+import 'reports_map_page.dart';
 
 // ─────────────────────────────────────────────
 // Shell principal con bottom navigation
@@ -46,7 +48,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   _HomeTab(user: user),
                   const PetsPage(),
-                  const _PlaceholderTab(label: 'Mapa', icon: Icons.map_rounded),
+                  const ReportsMapPage(),
                   _ProfileTab(user: user, isAuthLoading: isLoading),
                 ],
               ),
@@ -83,6 +85,13 @@ class _HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<_HomeTab> {
   int _reportsRefreshKey = 0;
+  int _notificationsRefreshKey = 0;
+
+  Future<void> _openNotifications() async {
+    await context.push<bool>(AppRoutes.notifications);
+    if (!mounted) return;
+    setState(() => _notificationsRefreshKey++);
+  }
 
   Future<void> _openLostReportForm() async {
     final created = await context.push<bool>(AppRoutes.lostReportForm);
@@ -151,19 +160,9 @@ class _HomeTabState extends State<_HomeTab> {
             ],
           ),
         ),
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: const Icon(
-            Icons.notifications_outlined,
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
+        _NotificationsButton(
+          key: ValueKey(_notificationsRefreshKey),
+          onTap: _openNotifications,
         ),
       ],
     );
@@ -407,6 +406,86 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
+class _NotificationsButton extends StatefulWidget {
+  const _NotificationsButton({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  State<_NotificationsButton> createState() => _NotificationsButtonState();
+}
+
+class _NotificationsButtonState extends State<_NotificationsButton> {
+  late Future<int> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = sl<GetUnreadNotificationsCount>()();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<int>(
+      future: _future,
+      builder: (context, snapshot) {
+        final unreadCount = snapshot.data ?? 0;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: Ink(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Center(
+                    child: Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.textSecondary,
+                      size: 22,
+                    ),
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        constraints: const BoxConstraints(minWidth: 18),
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Text(
+                          unreadCount > 9 ? '9+' : '$unreadCount',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 // ─────────────────────────────────────────────
 // Reportes recientes
 // ─────────────────────────────────────────────
@@ -423,16 +502,12 @@ class _RecentReportsSectionState extends State<_RecentReportsSection> {
   @override
   void initState() {
     super.initState();
-    _future = _loadReports();
-  }
-
-  Future<List<ReportEntity>> _loadReports() {
-    return sl<GetRecentReports>()(limit: 5);
+    _future = sl<GetRecentReports>()();
   }
 
   void _retry() {
     setState(() {
-      _future = _loadReports();
+      _future = sl<GetRecentReports>()();
     });
   }
 
@@ -442,15 +517,9 @@ class _RecentReportsSectionState extends State<_RecentReportsSection> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Center(
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
               child: CircularProgressIndicator(color: AppColors.primary),
             ),
           );
@@ -468,7 +537,7 @@ class _RecentReportsSectionState extends State<_RecentReportsSection> {
             child: Column(
               children: [
                 const Icon(
-                  Icons.wifi_off_rounded,
+                  Icons.wifi_tethering_error_rounded,
                   size: 40,
                   color: AppColors.textHint,
                 ),
@@ -704,52 +773,6 @@ String _foundTitle(ReportEntity report) {
   }
 
   return typeLabel;
-}
-
-// ─────────────────────────────────────────────
-// Tab placeholder genérico
-// ─────────────────────────────────────────────
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({required this.label, required this.icon});
-
-  final String label;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Icon(icon, size: 36, color: AppColors.primary),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Próximamente disponible',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ─────────────────────────────────────────────

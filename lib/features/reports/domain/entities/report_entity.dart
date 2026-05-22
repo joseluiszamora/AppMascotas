@@ -32,6 +32,9 @@ class ReportEntity extends Equatable {
     this.petId,
     this.petName,
     this.petBreed,
+    this.petType,
+    this.petColor,
+    this.petSize,
     required this.type,
     required this.latitude,
     required this.longitude,
@@ -54,6 +57,9 @@ class ReportEntity extends Equatable {
   final String? petId;
   final String? petName;
   final String? petBreed;
+  final ReportPetType? petType;
+  final String? petColor;
+  final ReportPetSize? petSize;
   final ReportType type;
   final double latitude;
   final double longitude;
@@ -72,6 +78,12 @@ class ReportEntity extends Equatable {
 
   String? get primaryPhotoUrl => photos.isEmpty ? null : photos.first.url;
 
+  ReportPetType? get effectivePetType => type == ReportType.lost ? petType : foundPetType;
+
+  ReportPetSize? get effectivePetSize => type == ReportType.lost ? petSize : foundPetSize;
+
+  String? get effectivePetColor => type == ReportType.lost ? petColor : foundPetColor;
+
   @override
   List<Object?> get props => [
     id,
@@ -79,6 +91,9 @@ class ReportEntity extends Equatable {
     petId,
     petName,
     petBreed,
+    petType,
+    petColor,
+    petSize,
     type,
     latitude,
     longitude,

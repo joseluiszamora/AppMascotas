@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../utils/service_locator.dart';
 import '../../features/auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../features/auth/presentation/blocs/auth/auth_state.dart';
+import '../../features/notifications/presentation/blocs/notification_cubit.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/map/presentation/pages/home_page.dart';
 import '../../features/pets/domain/entities/pet_entity.dart';
@@ -17,6 +19,7 @@ import '../../features/profile/presentation/pages/profile_setup_page.dart';
 import '../../features/reports/presentation/blocs/report_form/report_form_cubit.dart';
 import '../../features/reports/presentation/screens/found_report_form_screen.dart';
 import '../../features/reports/presentation/screens/lost_report_form_screen.dart';
+import '../../features/reports/presentation/screens/report_detail_screen.dart';
 
 class AppRoutes {
   static const login = '/login';
@@ -26,6 +29,9 @@ class AppRoutes {
   static const petForm = '/pets/form';
   static const lostReportForm = '/reports/lost/form';
   static const foundReportForm = '/reports/found/form';
+  static const notifications = '/notifications';
+
+  static String reportDetail(String reportId) => '/reports/$reportId';
 }
 
 class AppRouter {
@@ -131,6 +137,19 @@ class AppRouter {
           builder: (context, state) => BlocProvider<ReportFormCubit>(
             create: (_) => sl<ReportFormCubit>(),
             child: const FoundReportFormScreen(),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.notifications,
+          builder: (context, state) => BlocProvider<NotificationCubit>(
+            create: (_) => sl<NotificationCubit>(),
+            child: const NotificationsPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/reports/:reportId',
+          builder: (context, state) => ReportDetailScreen(
+            reportId: state.pathParameters['reportId']!,
           ),
         ),
       ],

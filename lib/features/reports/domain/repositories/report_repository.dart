@@ -3,6 +3,10 @@ import 'dart:io';
 import '../entities/report_entity.dart';
 
 abstract class ReportRepository {
+  Future<ReportEntity> getReportById(String reportId);
+
+  Future<List<ReportEntity>> getMapReports();
+
   Future<List<ReportEntity>> getRecentReports({int limit = 5});
 
   Future<ReportEntity> createFoundReport({

@@ -10,6 +10,13 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_with_google.dart';
 import '../../features/auth/domain/usecases/sign_out.dart';
 import '../../features/auth/presentation/blocs/auth/auth_bloc.dart';
+import '../../features/notifications/data/providers/notification_provider.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/notifications/domain/usecases/get_my_notifications.dart';
+import '../../features/notifications/domain/usecases/get_unread_notifications_count.dart';
+import '../../features/notifications/domain/usecases/mark_notification_as_read.dart';
+import '../../features/notifications/presentation/blocs/notification_cubit.dart';
 import '../../features/profile/data/providers/profile_provider.dart';
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
@@ -28,6 +35,8 @@ import '../../features/reports/data/repositories/report_repository_impl.dart';
 import '../../features/reports/domain/repositories/report_repository.dart';
 import '../../features/reports/domain/usecases/create_found_report.dart';
 import '../../features/reports/domain/usecases/create_lost_report.dart';
+import '../../features/reports/domain/usecases/get_map_reports.dart';
+import '../../features/reports/domain/usecases/get_report_by_id.dart';
 import '../../features/reports/domain/usecases/get_recent_reports.dart';
 import '../../features/reports/presentation/blocs/report_form/report_form_cubit.dart';
 import '../../features/profile/presentation/blocs/profile_cubit.dart';
@@ -130,6 +139,8 @@ Future<void> setupServiceLocator() async {
   // Reports — Use Cases
   sl.registerLazySingleton(() => CreateFoundReport(sl<ReportRepository>()));
   sl.registerLazySingleton(() => CreateLostReport(sl<ReportRepository>()));
+  sl.registerLazySingleton(() => GetMapReports(sl<ReportRepository>()));
+  sl.registerLazySingleton(() => GetReportById(sl<ReportRepository>()));
   sl.registerLazySingleton(() => GetRecentReports(sl<ReportRepository>()));
 
   // Reports — Cubit (local al formulario de reporte)
@@ -138,6 +149,33 @@ Future<void> setupServiceLocator() async {
       getMyPets: sl<GetMyPets>(),
       createFoundReport: sl<CreateFoundReport>(),
       createLostReport: sl<CreateLostReport>(),
+    ),
+  );
+
+  // Notifications — Data
+  sl.registerLazySingleton<NotificationProvider>(
+    () => NotificationProvider(supabase: sl<SupabaseClient>()),
+  );
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(sl<NotificationProvider>()),
+  );
+
+  // Notifications — Use Cases
+  sl.registerLazySingleton(
+    () => GetMyNotifications(sl<NotificationRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => GetUnreadNotificationsCount(sl<NotificationRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => MarkNotificationAsRead(sl<NotificationRepository>()),
+  );
+
+  // Notifications — Cubit
+  sl.registerFactory(
+    () => NotificationCubit(
+      getMyNotifications: sl<GetMyNotifications>(),
+      markNotificationAsRead: sl<MarkNotificationAsRead>(),
     ),
   );
 }

@@ -112,7 +112,7 @@ class ReportProvider {
   Future<List<ReportEntity>> getRecentReports({int limit = 5}) async {
     final data = await supabase
         .from('reports')
-        .select('*, report_photos(*), pets(name, breed)')
+        .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
         .inFilter('status', ['active', 'under_review'])
         .order('created_at', ascending: false)
         .limit(limit);
@@ -120,6 +120,29 @@ class ReportProvider {
     return (data as List<dynamic>)
         .map((row) => ReportModel.fromJson(row as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<ReportEntity>> getMapReports() async {
+    final data = await supabase
+        .from('reports')
+        .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
+        .inFilter('status', ['active', 'under_review'])
+        .order('occurred_at', ascending: false)
+        .limit(250);
+
+    return (data as List<dynamic>)
+        .map((row) => ReportModel.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<ReportEntity> getReportById(String reportId) async {
+    final data = await supabase
+        .from('reports')
+        .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
+        .eq('id', reportId)
+        .single();
+
+    return ReportModel.fromJson(data);
   }
 
   Future<ReportEntity> createFoundReport({
@@ -186,7 +209,7 @@ class ReportProvider {
 
     final data = await supabase
         .from('reports')
-        .select('*, report_photos(*), pets(name, breed)')
+      .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
         .eq('id', reportId)
         .single();
 
@@ -217,7 +240,7 @@ class ReportProvider {
 
     final data = await supabase
         .from('reports')
-        .select('*, report_photos(*)')
+      .select('*, report_photos(*), pets(name, breed, type, dominant_color, size)')
         .eq('id', reportId)
         .single();
 
