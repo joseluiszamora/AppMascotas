@@ -15,6 +15,7 @@ import '../../features/profile/presentation/blocs/profile_state.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/profile_setup_page.dart';
 import '../../features/reports/presentation/blocs/report_form/report_form_cubit.dart';
+import '../../features/reports/presentation/screens/found_report_form_screen.dart';
 import '../../features/reports/presentation/screens/lost_report_form_screen.dart';
 
 class AppRoutes {
@@ -24,6 +25,7 @@ class AppRoutes {
   static const profileEdit = '/profile-edit';
   static const petForm = '/pets/form';
   static const lostReportForm = '/reports/lost/form';
+  static const foundReportForm = '/reports/found/form';
 }
 
 class AppRouter {
@@ -123,6 +125,13 @@ class AppRouter {
               child: LostReportFormScreen(initialPetId: initialPetId),
             );
           },
+        ),
+        GoRoute(
+          path: AppRoutes.foundReportForm,
+          builder: (context, state) => BlocProvider<ReportFormCubit>(
+            create: (_) => sl<ReportFormCubit>(),
+            child: const FoundReportFormScreen(),
+          ),
         ),
       ],
     );

@@ -26,6 +26,7 @@ import '../../features/pets/presentation/blocs/pet_cubit.dart';
 import '../../features/reports/data/providers/report_provider.dart';
 import '../../features/reports/data/repositories/report_repository_impl.dart';
 import '../../features/reports/domain/repositories/report_repository.dart';
+import '../../features/reports/domain/usecases/create_found_report.dart';
 import '../../features/reports/domain/usecases/create_lost_report.dart';
 import '../../features/reports/domain/usecases/get_recent_reports.dart';
 import '../../features/reports/presentation/blocs/report_form/report_form_cubit.dart';
@@ -127,6 +128,7 @@ Future<void> setupServiceLocator() async {
   );
 
   // Reports — Use Cases
+  sl.registerLazySingleton(() => CreateFoundReport(sl<ReportRepository>()));
   sl.registerLazySingleton(() => CreateLostReport(sl<ReportRepository>()));
   sl.registerLazySingleton(() => GetRecentReports(sl<ReportRepository>()));
 
@@ -134,6 +136,7 @@ Future<void> setupServiceLocator() async {
   sl.registerFactory(
     () => ReportFormCubit(
       getMyPets: sl<GetMyPets>(),
+      createFoundReport: sl<CreateFoundReport>(),
       createLostReport: sl<CreateLostReport>(),
     ),
   );

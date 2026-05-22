@@ -4,6 +4,10 @@ enum ReportType { lost, found }
 
 enum ReportStatus { active, underReview, resolved, closed, reported }
 
+enum ReportPetType { dog, cat, other }
+
+enum ReportPetSize { small, medium, large, extraLarge }
+
 class ReportPhotoEntity extends Equatable {
   const ReportPhotoEntity({
     required this.id,
@@ -36,6 +40,10 @@ class ReportEntity extends Equatable {
     this.description,
     this.status = ReportStatus.active,
     this.showContact = false,
+    this.foundPetType,
+    this.foundPetColor,
+    this.foundPetSize,
+    this.foundPetDescription,
     this.photos = const [],
     required this.createdAt,
     required this.updatedAt,
@@ -54,6 +62,10 @@ class ReportEntity extends Equatable {
   final String? description;
   final ReportStatus status;
   final bool showContact;
+  final ReportPetType? foundPetType;
+  final String? foundPetColor;
+  final ReportPetSize? foundPetSize;
+  final String? foundPetDescription;
   final List<ReportPhotoEntity> photos;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -75,6 +87,10 @@ class ReportEntity extends Equatable {
     description,
     status,
     showContact,
+    foundPetType,
+    foundPetColor,
+    foundPetSize,
+    foundPetDescription,
     photos,
     createdAt,
     updatedAt,

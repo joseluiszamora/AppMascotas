@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../../domain/entities/report_entity.dart';
 import '../../domain/repositories/report_repository.dart';
 import '../providers/report_provider.dart';
@@ -10,6 +12,35 @@ class ReportRepositoryImpl implements ReportRepository {
   @override
   Future<List<ReportEntity>> getRecentReports({int limit = 5}) {
     return _provider.getRecentReports(limit: limit);
+  }
+
+  @override
+  Future<ReportEntity> createFoundReport({
+    required double latitude,
+    required double longitude,
+    String? locationDescription,
+    required DateTime occurredAt,
+    String? description,
+    required bool showContact,
+    required ReportPetType foundPetType,
+    String? foundPetColor,
+    ReportPetSize? foundPetSize,
+    String? foundPetDescription,
+    required List<File> photos,
+  }) {
+    return _provider.createFoundReport(
+      latitude: latitude,
+      longitude: longitude,
+      locationDescription: locationDescription,
+      occurredAt: occurredAt,
+      description: description,
+      showContact: showContact,
+      foundPetType: foundPetType,
+      foundPetColor: foundPetColor,
+      foundPetSize: foundPetSize,
+      foundPetDescription: foundPetDescription,
+      photos: photos,
+    );
   }
 
   @override

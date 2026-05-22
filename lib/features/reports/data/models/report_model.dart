@@ -30,6 +30,10 @@ class ReportModel {
       description: json['description'] as String?,
       status: _parseStatus(json['status'] as String? ?? 'active'),
       showContact: json['show_contact'] as bool? ?? false,
+      foundPetType: _parsePetType(json['found_pet_type'] as String?),
+      foundPetColor: json['found_pet_color'] as String?,
+      foundPetSize: _parsePetSize(json['found_pet_size'] as String?),
+      foundPetDescription: json['found_pet_description'] as String?,
       photos: photosRaw
           .map((photo) => ReportPhotoModel.fromJson(photo as Map<String, dynamic>))
           .toList(),
@@ -55,5 +59,20 @@ class ReportModel {
     'closed' => ReportStatus.closed,
     'reported' => ReportStatus.reported,
     _ => ReportStatus.active,
+  };
+
+  static ReportPetType? _parsePetType(String? value) => switch (value) {
+    'dog' => ReportPetType.dog,
+    'cat' => ReportPetType.cat,
+    'other' => ReportPetType.other,
+    _ => null,
+  };
+
+  static ReportPetSize? _parsePetSize(String? value) => switch (value) {
+    'small' => ReportPetSize.small,
+    'medium' => ReportPetSize.medium,
+    'large' => ReportPetSize.large,
+    'extra_large' => ReportPetSize.extraLarge,
+    _ => null,
   };
 }

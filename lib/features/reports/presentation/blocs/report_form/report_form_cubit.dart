@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../pets/domain/entities/pet_entity.dart';
 import '../../../../pets/domain/usecases/get_my_pets.dart';
+import '../../../domain/entities/report_entity.dart';
+import '../../../domain/usecases/create_found_report.dart';
 import '../../../domain/usecases/create_lost_report.dart';
 import 'report_form_state.dart';
 
@@ -10,12 +14,15 @@ class ReportFormCubit extends Cubit<ReportFormState> {
   ReportFormCubit({
     required GetMyPets getMyPets,
     required CreateLostReport createLostReport,
+    required CreateFoundReport createFoundReport,
   }) : _getMyPets = getMyPets,
        _createLostReport = createLostReport,
+       _createFoundReport = createFoundReport,
        super(const ReportFormState());
 
   final GetMyPets _getMyPets;
   final CreateLostReport _createLostReport;
+  final CreateFoundReport _createFoundReport;
 
   Future<void> loadPets(String ownerId) async {
     emit(
@@ -101,6 +108,62 @@ class ReportFormCubit extends Cubit<ReportFormState> {
     }
   }
 
+  Future<void> submitFoundReport({
+    required double latitude,
+    required double longitude,
+    String? locationDescription,
+    required DateTime occurredAt,
+    String? description,
+    required bool showContact,
+    required ReportPetType foundPetType,
+    String? foundPetColor,
+    ReportPetSize? foundPetSize,
+    String? foundPetDescription,
+    required List<File> photos,
+  }) async {
+    emit(
+      state.copyWith(
+        isSubmitting: true,
+        clearErrorMessage: true,
+        clearSuccessMessage: true,
+        clearCreatedReport: true,
+      ),
+    );
+
+    try {
+      final report = await _createFoundReport(
+        latitude: latitude,
+        longitude: longitude,
+        locationDescription: locationDescription,
+        occurredAt: occurredAt,
+        description: description,
+        showContact: showContact,
+        foundPetType: foundPetType,
+        foundPetColor: foundPetColor,
+        foundPetSize: foundPetSize,
+        foundPetDescription: foundPetDescription,
+        photos: photos,
+      );
+
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          successMessage: 'Reporte de mascota encontrada publicado.',
+          createdReport: report,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          errorMessage: _mapError(e),
+          clearSuccessMessage: true,
+          clearCreatedReport: true,
+        ),
+      );
+    }
+  }
+
   void clearFeedback() {
     emit(
       state.copyWith(
@@ -112,6 +175,14 @@ class ReportFormCubit extends Cubit<ReportFormState> {
   }
 
   String _mapError(Object error) {
+    if (error is StorageException) {
+      final message = error.message.toLowerCase();
+      if (message.contains('formato de imagen no soportado')) {
+        return 'Formato de imagen no soportado. Usa JPG, PNG, WEBP, GIF o HEIC.';
+      }
+      return 'No pudimos subir las fotos del reporte. ${error.message}';
+    }
+
     if (error is PostgrestException) {
       final message = error.message.toLowerCase();
       if (message.contains('no pertenece')) {

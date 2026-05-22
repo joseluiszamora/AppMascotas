@@ -91,6 +91,13 @@ class _HomeTabState extends State<_HomeTab> {
     }
   }
 
+  Future<void> _openFoundReportForm() async {
+    final created = await context.push<bool>(AppRoutes.foundReportForm);
+    if (created == true && mounted) {
+      setState(() => _reportsRefreshKey++);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final firstName = widget.user?.name?.split(' ').first;
@@ -198,12 +205,13 @@ class _HomeTabState extends State<_HomeTab> {
           iconColor: AppColors.lostPet,
           onTap: _openLostReportForm,
         ),
-        const _QuickActionCard(
+        _QuickActionCard(
           icon: Icons.favorite_rounded,
           label: 'Reportar encontrada',
           sublabel: 'Ayuda al dueño',
           bgColor: AppColors.pastelGreen,
           iconColor: AppColors.foundPet,
+          onTap: _openFoundReportForm,
         ),
         const _QuickActionCard(
           icon: Icons.map_rounded,
@@ -546,8 +554,14 @@ class _RecentReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateLabel = DateFormat('d MMM, HH:mm', 'es').format(report.occurredAt);
-    final title = report.petName ?? 'Mascota perdida';
+    final isLost = report.type == ReportType.lost;
+    final title = isLost
+        ? (report.petName ?? 'Mascota perdida')
+        : _foundTitle(report);
     final subtitle = report.locationDescription ?? 'Ubicación aproximada registrada';
+    final badgeText = isLost ? 'Perdida' : 'Encontrada';
+    final badgeColor = isLost ? AppColors.lostPet : AppColors.foundPet;
+    final badgeBg = isLost ? AppColors.pastelPink : AppColors.pastelGreen;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -588,15 +602,15 @@ class _RecentReportCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.pastelPink,
+                    color: badgeBg,
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Text(
-                    'Perdida',
+                  child: Text(
+                    badgeText,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.lostPet,
+                      color: badgeColor,
                     ),
                   ),
                 ),
@@ -676,6 +690,20 @@ class _RecentReportPlaceholder extends StatelessWidget {
       ),
     );
   }
+}
+
+String _foundTitle(ReportEntity report) {
+  final typeLabel = switch (report.foundPetType) {
+    ReportPetType.cat => 'Gato encontrado',
+    ReportPetType.other => 'Mascota encontrada',
+    _ => 'Perro encontrado',
+  };
+
+  if (report.foundPetColor != null && report.foundPetColor!.trim().isNotEmpty) {
+    return '$typeLabel · ${report.foundPetColor!}';
+  }
+
+  return typeLabel;
 }
 
 // ─────────────────────────────────────────────
