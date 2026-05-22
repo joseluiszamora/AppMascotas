@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +17,7 @@ import '../../../pets/domain/entities/pet_entity.dart';
 import '../../../pets/presentation/blocs/pet_cubit.dart';
 import '../blocs/report_form/report_form_cubit.dart';
 import '../blocs/report_form/report_form_state.dart';
+import '../widgets/report_location_picker_page.dart';
 
 class LostReportFormScreen extends StatefulWidget {
   const LostReportFormScreen({super.key, this.initialPetId});
@@ -40,7 +40,6 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
   DateTime _occurredAt = DateTime.now();
   String? _selectedPetId;
   bool _showContact = false;
-  bool _isLocating = false;
 
   @override
   void initState() {
@@ -109,50 +108,21 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
     setState(() => _photos.add(cropped));
   }
 
-  Future<void> _useCurrentLocation() async {
-    setState(() => _isLocating = true);
-    try {
-      final isEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!isEnabled) {
-        _showMessage('Activa la ubicación del dispositivo para continuar.');
-        return;
-      }
+  Future<void> _pickLocationOnMap() async {
+    final initialLatitude = double.tryParse(_latitudeCtrl.text.trim());
+    final initialLongitude = double.tryParse(_longitudeCtrl.text.trim());
 
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
+    final result = await pickReportLocation(
+      context,
+      initialLatitude: initialLatitude,
+      initialLongitude: initialLongitude,
+    );
+    if (result == null || !mounted) return;
 
-      if (permission == LocationPermission.denied) {
-        _showMessage('Debes autorizar la ubicación para cargar el punto.');
-        return;
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        _showMessage(
-          'La ubicación está bloqueada. Habilítala desde ajustes del sistema.',
-        );
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
-
-      if (!mounted) return;
-      _latitudeCtrl.text = position.latitude.toStringAsFixed(6);
-      _longitudeCtrl.text = position.longitude.toStringAsFixed(6);
-      _showMessage('Ubicación cargada.', isError: false);
-    } catch (_) {
-      if (!mounted) return;
-      _showMessage('No pudimos obtener tu ubicación. Intenta de nuevo.');
-    } finally {
-      if (mounted) {
-        setState(() => _isLocating = false);
-      }
-    }
+    setState(() {
+      _latitudeCtrl.text = result.latitude.toStringAsFixed(6);
+      _longitudeCtrl.text = result.longitude.toStringAsFixed(6);
+    });
   }
 
   void _submit() {
@@ -294,54 +264,11 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                         const SizedBox(height: 20),
                         _buildLabel('Ubicación aproximada *'),
                         const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _latitudeCtrl,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                      signed: true,
-                                    ),
-                                decoration: _inputDecoration('Latitud'),
-                                validator: _validateCoordinate,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _longitudeCtrl,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                      signed: true,
-                                    ),
-                                decoration: _inputDecoration('Longitud'),
-                                validator: _validateCoordinate,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        OutlinedButton.icon(
-                          onPressed: state.isSubmitting || _isLocating
-                              ? null
-                              : _useCurrentLocation,
-                          icon: _isLocating
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.my_location_rounded),
-                          label: Text(
-                            _isLocating
-                                ? 'Obteniendo ubicación...'
-                                : 'Usar ubicación actual',
-                          ),
+                        ReportLocationPickerCard(
+                          latitude: _latitudeCtrl.text,
+                          longitude: _longitudeCtrl.text,
+                          disabled: state.isSubmitting,
+                          onTap: _pickLocationOnMap,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -572,13 +499,6 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
         borderSide: const BorderSide(color: AppColors.error, width: 1.5),
       ),
     );
-  }
-
-  String? _validateCoordinate(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Obligatorio';
-    }
-    return double.tryParse(value.trim()) == null ? 'Valor inválido' : null;
   }
 }
 
