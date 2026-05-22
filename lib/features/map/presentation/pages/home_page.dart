@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../../auth/presentation/blocs/auth/auth_event.dart';
 import '../../../auth/presentation/blocs/auth/auth_state.dart';
-import '../../../auth/domain/entities/user_entity.dart';
+import '../../../profile/domain/entities/profile_entity.dart';
+import '../../../profile/presentation/blocs/profile_cubit.dart';
+import '../../../profile/presentation/blocs/profile_state.dart';
 
 // ─────────────────────────────────────────────
 // Shell principal con bottom navigation
@@ -40,7 +45,7 @@ class _HomePageState extends State<HomePage> {
                     icon: Icons.pets_rounded,
                   ),
                   const _PlaceholderTab(label: 'Mapa', icon: Icons.map_rounded),
-                  _ProfileTab(user: user, isLoading: isLoading),
+                  _ProfileTab(user: user, isAuthLoading: isLoading),
                 ],
               ),
               bottomNavigationBar: _BottomNav(
@@ -464,13 +469,29 @@ class _PlaceholderTab extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-// Tab 3: Perfil (con sign-out temporal)
+// Tab 3: Perfil
 // ─────────────────────────────────────────────
-class _ProfileTab extends StatelessWidget {
-  const _ProfileTab({required this.user, required this.isLoading});
+class _ProfileTab extends StatefulWidget {
+  const _ProfileTab({required this.user, required this.isAuthLoading});
 
   final UserEntity? user;
-  final bool isLoading;
+  final bool isAuthLoading;
+
+  @override
+  State<_ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<_ProfileTab> {
+  @override
+  void initState() {
+    super.initState();
+    // El perfil ya fue cargado por _RouterNotifier al autenticar.
+    // Solo recargar si por alguna razón está en estado inicial.
+    final state = context.read<ProfileCubit>().state;
+    if (widget.user != null && state is ProfileInitial) {
+      context.read<ProfileCubit>().loadProfile(widget.user!.id);
+    }
+  }
 
   Future<void> _confirmSignOut(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -497,120 +518,229 @@ class _ProfileTab extends StatelessWidget {
     }
   }
 
+  Future<void> _openEditProfile(
+    BuildContext context,
+    ProfileEntity profile,
+  ) async {
+    final updated = await context.push<ProfileEntity>(
+      AppRoutes.profileEdit,
+      extra: profile,
+    );
+    if (updated != null && context.mounted) {
+      context.read<ProfileCubit>().loadProfile(updated.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
-            const Text(
-              'Perfil',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Avatar + nombre
-            Row(
+    final isAuthLoading = widget.isAuthLoading;
+
+    return BlocBuilder<ProfileCubit, ProfileState>(
+      builder: (context, profileState) {
+        final profile = switch (profileState) {
+          ProfileLoaded(:final profile) => profile,
+          ProfileUpdating(:final profile) => profile,
+          ProfileUpdateSuccess(:final profile) => profile,
+          _ => null,
+        };
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.person_rounded,
-                    size: 32,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user?.name ?? 'Mi perfil',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        user?.email ?? '',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: const Center(
-                child: Text(
-                  'Edición de perfil próximamente',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-            const Spacer(),
-            // Botón cerrar sesión
-            GestureDetector(
-              onTap: isLoading ? null : () => _confirmSignOut(context),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.pastelPink,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(
-                      Icons.logout_rounded,
-                      color: AppColors.error,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Cerrar sesión',
+                    const Text(
+                      'Perfil',
                       style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: isLoading ? AppColors.textHint : AppColors.error,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    if (profile != null)
+                      GestureDetector(
+                        onTap: () => _openEditProfile(context, profile),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLight,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.edit_rounded,
+                                size: 14,
+                                color: AppColors.primaryDark,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Editar',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Avatar + nombre
+                Row(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        size: 32,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (profileState is ProfileLoading)
+                            Container(
+                              height: 16,
+                              width: 120,
+                              decoration: BoxDecoration(
+                                color: AppColors.border,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            )
+                          else
+                            Text(
+                              profile?.fullName.isNotEmpty == true
+                                  ? profile!.fullName
+                                  : (widget.user?.name ?? 'Mi perfil'),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.user?.email ?? '',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 24),
+
+                // Preferencias
+                if (profile != null)
+                  _buildPreferenceChip(profile.petPreferences),
+                if (profileState is ProfileError)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      profileState.message,
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+
+                const Spacer(),
+
+                // Botón cerrar sesión
+                GestureDetector(
+                  onTap: isAuthLoading ? null : () => _confirmSignOut(context),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.pastelPink,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.logout_rounded,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Cerrar sesión',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: isAuthLoading
+                                ? AppColors.textHint
+                                : AppColors.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
-            const SizedBox(height: 8),
-          ],
-        ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPreferenceChip(PetPreference pref) {
+    final (label, icon) = switch (pref) {
+      PetPreference.dogs => ('Perros', '🐶'),
+      PetPreference.cats => ('Gatos', '🐱'),
+      PetPreference.others => ('Otros animales', '🐾'),
+      _ => ('Perros y gatos', '🐾'),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 14)),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primaryDark,
+            ),
+          ),
+        ],
       ),
     );
   }

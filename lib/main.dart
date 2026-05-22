@@ -8,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'core/utils/service_locator.dart';
 import 'features/auth/presentation/blocs/auth/auth_bloc.dart';
 import 'features/auth/presentation/blocs/auth/auth_event.dart';
+import 'features/profile/presentation/blocs/profile_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +30,13 @@ class AppMascotas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AuthBloc>(
-      create: (_) => sl<AuthBloc>()..add(const AuthStarted()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (_) => sl<AuthBloc>()..add(const AuthStarted()),
+        ),
+        BlocProvider<ProfileCubit>(create: (_) => sl<ProfileCubit>()),
+      ],
       child: Builder(
         builder: (context) => MaterialApp.router(
           title: AppConstants.appName,

@@ -12,10 +12,8 @@ class ProfileModel {
       phoneVisible: (json['phone_visible'] as bool?) ?? false,
       avatarUrl: json['avatar_url'] as String?,
       petPreferences: _parsePetPreference(json['pet_preferences'] as String?),
-      notificationsEnabled:
-          (json['notifications_enabled'] as bool?) ?? true,
-      notificationRadiusKm:
-          (json['notification_radius_km'] as int?) ?? 10,
+      notificationsEnabled: (json['notifications_enabled'] as bool?) ?? true,
+      notificationRadiusKm: (json['notification_radius_km'] as int?) ?? 10,
     );
   }
 

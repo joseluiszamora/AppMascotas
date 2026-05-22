@@ -10,6 +10,12 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_with_google.dart';
 import '../../features/auth/domain/usecases/sign_out.dart';
 import '../../features/auth/presentation/blocs/auth/auth_bloc.dart';
+import '../../features/profile/data/providers/profile_provider.dart';
+import '../../features/profile/data/repositories/profile_repository_impl.dart';
+import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/domain/usecases/get_profile.dart';
+import '../../features/profile/domain/usecases/update_profile.dart';
+import '../../features/profile/presentation/blocs/profile_cubit.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -50,6 +56,26 @@ Future<void> setupServiceLocator() async {
       authRepository: sl<AuthRepository>(),
       signInWithGoogle: sl<SignInWithGoogle>(),
       signOut: sl<SignOut>(),
+    ),
+  );
+
+  // Profile — Data
+  sl.registerLazySingleton<ProfileProvider>(
+    () => ProfileProvider(supabase: sl<SupabaseClient>()),
+  );
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(sl<ProfileProvider>()),
+  );
+
+  // Profile — Use Cases
+  sl.registerLazySingleton(() => GetProfile(sl<ProfileRepository>()));
+  sl.registerLazySingleton(() => UpdateProfile(sl<ProfileRepository>()));
+
+  // Profile — Cubit (singleton global: controla el flujo del router)
+  sl.registerLazySingleton(
+    () => ProfileCubit(
+      getProfile: sl<GetProfile>(),
+      updateProfile: sl<UpdateProfile>(),
     ),
   );
 }

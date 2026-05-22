@@ -149,8 +149,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   label: 'Nombre',
                   hint: 'Tu nombre',
                   icon: Icons.person_outline_rounded,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Ingresa tu nombre' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Ingresa tu nombre'
+                      : null,
                   enabled: !isSaving,
                 ),
                 const SizedBox(height: 12),
@@ -263,10 +264,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       enabled: enabled,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(
-        fontSize: 15,
-        color: AppColors.textPrimary,
-      ),
+      style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -275,10 +273,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           color: AppColors.textSecondary,
           fontSize: 14,
         ),
-        hintStyle: const TextStyle(
-          color: AppColors.textHint,
-          fontSize: 14,
-        ),
+        hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
@@ -291,8 +286,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide:
-              const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -300,8 +294,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide:
-              const BorderSide(color: AppColors.error, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -323,10 +316,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(width: 8),
         const Text(
           'Mostrar teléfono a otros usuarios',
-          style: TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
         ),
       ],
     );
@@ -369,9 +359,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   opt.label,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: isSelected
-                        ? FontWeight.w700
-                        : FontWeight.w400,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                     color: isSelected
                         ? AppColors.primaryDark
                         : AppColors.textSecondary,
@@ -405,24 +393,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             subtitle: const Text(
               'Alertas de mascotas en tu zona',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             value: _notificationsEnabled,
             onChanged: disabled
                 ? null
                 : (v) => setState(() => _notificationsEnabled = v),
             activeColor: AppColors.primary,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 4,
+            ),
           ),
           if (_notificationsEnabled) ...[
             const Divider(height: 1, color: AppColors.border),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -460,12 +446,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
-                      Text('1 km',
-                          style: TextStyle(
-                              fontSize: 11, color: AppColors.textHint)),
-                      Text('50 km',
-                          style: TextStyle(
-                              fontSize: 11, color: AppColors.textHint)),
+                      Text(
+                        '1 km',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textHint,
+                        ),
+                      ),
+                      Text(
+                        '50 km',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textHint,
+                        ),
+                      ),
                     ],
                   ),
                 ],

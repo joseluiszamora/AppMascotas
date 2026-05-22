@@ -6,28 +6,77 @@ import '../../features/auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../features/auth/presentation/blocs/auth/auth_state.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/map/presentation/pages/home_page.dart';
+import '../../features/profile/domain/entities/profile_entity.dart';
+import '../../features/profile/presentation/blocs/profile_cubit.dart';
+import '../../features/profile/presentation/blocs/profile_state.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/profile_setup_page.dart';
 
 class AppRoutes {
   static const login = '/login';
   static const home = '/';
+  static const profileSetup = '/profile-setup';
+  static const profileEdit = '/profile-edit';
 }
 
 class AppRouter {
   AppRouter._();
 
   static GoRouter routerOf(BuildContext context) {
+    final authBloc = context.read<AuthBloc>();
+    final profileCubit = context.read<ProfileCubit>();
+
     return GoRouter(
       initialLocation: AppRoutes.home,
-      refreshListenable: _AuthNotifier(context.read<AuthBloc>()),
-      redirect: (context, state) {
-        final authState = context.read<AuthBloc>().state;
-        final isLoggedIn = authState is AuthAuthenticated;
-        final isInitial = authState is AuthInitial || authState is AuthLoading;
-        final isOnLogin = state.matchedLocation == AppRoutes.login;
+      refreshListenable: _RouterNotifier(authBloc, profileCubit),
+      redirect: (ctx, state) {
+        final authState = authBloc.state;
+        final profileState = profileCubit.state;
 
-        if (isInitial) return null;
+        final isLoggedIn = authState is AuthAuthenticated;
+        final isInitialAuth =
+            authState is AuthInitial || authState is AuthLoading;
+        final loc = state.matchedLocation;
+        final isOnLogin = loc == AppRoutes.login;
+        final isOnSetup = loc == AppRoutes.profileSetup;
+        final isOnEdit = loc == AppRoutes.profileEdit;
+
+        // Esperando que se resuelva el estado de autenticación
+        if (isInitialAuth) return null;
+
+        // No autenticado → login
         if (!isLoggedIn && !isOnLogin) return AppRoutes.login;
+
+        // Autenticado en la pantalla de login → home (el check de perfil ocurrirá desde ahí)
         if (isLoggedIn && isOnLogin) return AppRoutes.home;
+
+        // La pantalla de edición de perfil es siempre accesible
+        if (isOnEdit) return null;
+
+        // ── Verificación de completitud del perfil ──
+        if (isLoggedIn && !isOnSetup) {
+          // Perfil aún no cargado: esperar
+          if (profileState is ProfileInitial ||
+              profileState is ProfileLoading) {
+            return null;
+          }
+          // Perfil cargado e incompleto → pantalla de setup
+          if (profileState is ProfileLoaded &&
+              !profileState.profile.isComplete) {
+            return AppRoutes.profileSetup;
+          }
+        }
+
+        // Si ya completó el perfil y sigue en setup → home
+        if (isOnSetup) {
+          final isComplete = switch (profileState) {
+            ProfileLoaded(:final profile) => profile.isComplete,
+            ProfileUpdateSuccess(:final profile) => profile.isComplete,
+            _ => false,
+          };
+          if (isComplete) return AppRoutes.home;
+        }
+
         return null;
       },
       routes: [
@@ -39,21 +88,46 @@ class AppRouter {
           path: AppRoutes.home,
           builder: (context, _) => const HomePage(),
         ),
+        GoRoute(
+          path: AppRoutes.profileSetup,
+          // El ProfileCubit global ya tiene el perfil cargado
+          builder: (context, _) => const ProfileSetupPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.profileEdit,
+          builder: (context, state) {
+            final profile = state.extra as ProfileEntity;
+            return EditProfilePage(profile: profile);
+          },
+        ),
       ],
     );
   }
 }
 
-class _AuthNotifier extends ChangeNotifier {
-  _AuthNotifier(AuthBloc authBloc) {
-    _subscription = authBloc.stream.listen((_) => notifyListeners());
+/// Escucha [AuthBloc] y [ProfileCubit] para refrescar el router.
+/// Cuando el usuario se autentica, dispara la carga del perfil.
+/// Cuando cierra sesión, reinicia el estado del perfil.
+class _RouterNotifier extends ChangeNotifier {
+  _RouterNotifier(AuthBloc authBloc, ProfileCubit profileCubit) {
+    _authSub = authBloc.stream.listen((authState) {
+      if (authState is AuthAuthenticated) {
+        profileCubit.loadProfile(authState.user.id);
+      } else if (authState is AuthUnauthenticated) {
+        profileCubit.resetProfile();
+      }
+      notifyListeners();
+    });
+    _profileSub = profileCubit.stream.listen((_) => notifyListeners());
   }
 
-  late final dynamic _subscription;
+  late final dynamic _authSub;
+  late final dynamic _profileSub;
 
   @override
   void dispose() {
-    _subscription.cancel();
+    _authSub.cancel();
+    _profileSub.cancel();
     super.dispose();
   }
 }
