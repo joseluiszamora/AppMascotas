@@ -6,6 +6,8 @@ import '../../features/auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../features/auth/presentation/blocs/auth/auth_state.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/map/presentation/pages/home_page.dart';
+import '../../features/pets/domain/entities/pet_entity.dart';
+import '../../features/pets/presentation/screens/pet_form_screen.dart';
 import '../../features/profile/domain/entities/profile_entity.dart';
 import '../../features/profile/presentation/blocs/profile_cubit.dart';
 import '../../features/profile/presentation/blocs/profile_state.dart';
@@ -17,6 +19,7 @@ class AppRoutes {
   static const home = '/';
   static const profileSetup = '/profile-setup';
   static const profileEdit = '/profile-edit';
+  static const petForm = '/pets/form';
 }
 
 class AppRouter {
@@ -98,6 +101,13 @@ class AppRouter {
           builder: (context, state) {
             final profile = state.extra as ProfileEntity;
             return EditProfilePage(profile: profile);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.petForm,
+          builder: (context, state) {
+            final pet = state.extra as PetEntity?;
+            return PetFormScreen(pet: pet);
           },
         ),
       ],

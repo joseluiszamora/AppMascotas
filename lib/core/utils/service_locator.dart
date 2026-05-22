@@ -15,6 +15,14 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/get_profile.dart';
 import '../../features/profile/domain/usecases/update_profile.dart';
+import '../../features/pets/data/providers/pet_provider.dart';
+import '../../features/pets/data/repositories/pet_repository_impl.dart';
+import '../../features/pets/domain/repositories/pet_repository.dart';
+import '../../features/pets/domain/usecases/create_pet.dart';
+import '../../features/pets/domain/usecases/delete_pet.dart';
+import '../../features/pets/domain/usecases/get_my_pets.dart';
+import '../../features/pets/domain/usecases/update_pet.dart';
+import '../../features/pets/presentation/blocs/pet_cubit.dart';
 import '../../features/profile/presentation/blocs/profile_cubit.dart';
 
 final GetIt sl = GetIt.instance;
@@ -76,6 +84,31 @@ Future<void> setupServiceLocator() async {
     () => ProfileCubit(
       getProfile: sl<GetProfile>(),
       updateProfile: sl<UpdateProfile>(),
+    ),
+  );
+
+  // Pets — Data
+  sl.registerLazySingleton<PetProvider>(
+    () => PetProvider(supabase: sl<SupabaseClient>()),
+  );
+  sl.registerLazySingleton<PetRepository>(
+    () => PetRepositoryImpl(sl<PetProvider>()),
+  );
+
+  // Pets — Use Cases
+  sl.registerLazySingleton(() => GetMyPets(sl<PetRepository>()));
+  sl.registerLazySingleton(() => CreatePet(sl<PetRepository>()));
+  sl.registerLazySingleton(() => UpdatePet(sl<PetRepository>()));
+  sl.registerLazySingleton(() => DeletePet(sl<PetRepository>()));
+
+  // Pets — Cubit (singleton: compartido entre PetsPage y PetFormScreen)
+  sl.registerLazySingleton(
+    () => PetCubit(
+      getMyPets: sl<GetMyPets>(),
+      createPet: sl<CreatePet>(),
+      updatePet: sl<UpdatePet>(),
+      deletePet: sl<DeletePet>(),
+      repository: sl<PetRepository>(),
     ),
   );
 }

@@ -8,6 +8,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../../auth/presentation/blocs/auth/auth_event.dart';
 import '../../../auth/presentation/blocs/auth/auth_state.dart';
+import '../../../pets/presentation/pages/pets_page.dart';
 import '../../../profile/domain/entities/profile_entity.dart';
 import '../../../profile/presentation/blocs/profile_cubit.dart';
 import '../../../profile/presentation/blocs/profile_state.dart';
@@ -40,10 +41,7 @@ class _HomePageState extends State<HomePage> {
                 index: _currentIndex,
                 children: [
                   _HomeTab(user: user),
-                  const _PlaceholderTab(
-                    label: 'Mis Mascotas',
-                    icon: Icons.pets_rounded,
-                  ),
+                  const PetsPage(),
                   const _PlaceholderTab(label: 'Mapa', icon: Icons.map_rounded),
                   _ProfileTab(user: user, isAuthLoading: isLoading),
                 ],
