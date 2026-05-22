@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -17,6 +16,7 @@ import '../../../profile/presentation/blocs/profile_cubit.dart';
 import '../../../profile/presentation/blocs/profile_state.dart';
 import '../../../reports/domain/entities/report_entity.dart';
 import '../../../reports/domain/usecases/get_recent_reports.dart';
+import '../../../reports/presentation/widgets/report_list_components.dart';
 import 'reports_map_page.dart';
 
 // ─────────────────────────────────────────────
@@ -577,7 +577,7 @@ class _RecentReportsSectionState extends State<_RecentReportsSection> {
               .map(
                 (report) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _RecentReportCard(report: report),
+                  child: ReportListCard(report: report),
                 ),
               )
               .toList(),
@@ -622,171 +622,6 @@ class _EmptyReportsCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _RecentReportCard extends StatelessWidget {
-  const _RecentReportCard({required this.report});
-
-  final ReportEntity report;
-
-  @override
-  Widget build(BuildContext context) {
-    final dateLabel = DateFormat(
-      'd MMM, HH:mm',
-      'es',
-    ).format(report.occurredAt);
-    final isLost = report.type == ReportType.lost;
-    final title = isLost
-        ? (report.petName ?? 'Mascota perdida')
-        : _foundTitle(report);
-    final subtitle =
-        report.locationDescription ?? 'Ubicación aproximada registrada';
-    final badgeText = isLost ? 'Perdida' : 'Encontrada';
-    final badgeColor = isLost ? AppColors.lostPet : AppColors.foundPet;
-    final badgeBg = isLost ? AppColors.pastelPink : AppColors.pastelGreen;
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: SizedBox(
-              width: 76,
-              height: 76,
-              child: report.primaryPhotoUrl != null
-                  ? Image.network(
-                      report.primaryPhotoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, error, stackTrace) =>
-                          const _RecentReportPlaceholder(),
-                    )
-                  : const _RecentReportPlaceholder(),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: badgeBg,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: badgeColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                if (report.petBreed != null &&
-                    report.petBreed!.trim().isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 3),
-                    child: Text(
-                      report.petBreed!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.schedule_rounded,
-                      size: 14,
-                      color: AppColors.textHint,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      dateLabel,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textHint,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RecentReportPlaceholder extends StatelessWidget {
-  const _RecentReportPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.pastelPink,
-      alignment: Alignment.center,
-      child: const Icon(Icons.pets_rounded, color: AppColors.lostPet, size: 30),
-    );
-  }
-}
-
-String _foundTitle(ReportEntity report) {
-  final typeLabel = switch (report.foundPetType) {
-    ReportPetType.cat => 'Gato encontrado',
-    ReportPetType.other => 'Mascota encontrada',
-    _ => 'Perro encontrado',
-  };
-
-  if (report.foundPetColor != null && report.foundPetColor!.trim().isNotEmpty) {
-    return '$typeLabel · ${report.foundPetColor!}';
-  }
-
-  return typeLabel;
 }
 
 // ─────────────────────────────────────────────

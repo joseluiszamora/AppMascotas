@@ -26,8 +26,16 @@ class ProfileProvider {
         .from('profiles')
         .select()
         .eq('id', userId)
-        .single();
-    return ProfileModel.fromJson(data);
+        .limit(1)
+        .maybeSingle();
+
+    if (data == null) {
+      final seededProfile = await _seedProfileFromAuth(userId);
+      return _hydrateMissingAuthFields(seededProfile);
+    }
+
+    final profile = ProfileModel.fromJson(data);
+    return _hydrateMissingAuthFields(profile);
   }
 
   Future<ProfileEntity> updateProfile(
@@ -47,11 +55,17 @@ class ProfileProvider {
         nextAvatarUrl = null;
       }
 
+      final payload = {
+        'id': profile.id,
+        ...ProfileModel.toUpdateJson(profile, avatarUrl: nextAvatarUrl),
+      };
+
+      await supabase.from('profiles').upsert(payload, onConflict: 'id');
+
       final data = await supabase
           .from('profiles')
-          .update(ProfileModel.toUpdateJson(profile, avatarUrl: nextAvatarUrl))
-          .eq('id', profile.id)
           .select()
+          .eq('id', profile.id)
           .single();
 
       if (avatarFile != null && profile.avatarUrl != null) {
@@ -60,7 +74,7 @@ class ProfileProvider {
         await _removeAvatarByUrl(profile.avatarUrl!);
       }
 
-      return ProfileModel.fromJson(data);
+      return _hydrateMissingAuthFields(ProfileModel.fromJson(data));
     } catch (error) {
       if (uploadedPath != null) {
         try {
@@ -175,5 +189,102 @@ class ProfileProvider {
         await supabase.storage.from(_storageBucket).remove([storagePath]);
       }
     } catch (_) {}
+  }
+
+  Future<ProfileEntity> _seedProfileFromAuth(String userId) async {
+    final authDefaults = _authDefaultsForCurrentUser(userId);
+    final payload = {
+      'id': userId,
+      'first_name': authDefaults.firstName,
+      'last_name': authDefaults.lastName,
+      'avatar_url': authDefaults.avatarUrl,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    await supabase.from('profiles').upsert(payload, onConflict: 'id');
+
+    final data = await supabase
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .single();
+    return ProfileModel.fromJson(data);
+  }
+
+  Future<ProfileEntity> _hydrateMissingAuthFields(ProfileEntity profile) async {
+    final authDefaults = _authDefaultsForCurrentUser(profile.id);
+    final nextFirstName = _hasText(profile.firstName)
+        ? profile.firstName
+        : authDefaults.firstName;
+    final nextLastName = _hasText(profile.lastName)
+        ? profile.lastName
+        : authDefaults.lastName;
+    final nextAvatarUrl = _hasText(profile.avatarUrl)
+        ? profile.avatarUrl
+        : authDefaults.avatarUrl;
+
+    if (nextFirstName == profile.firstName &&
+        nextLastName == profile.lastName &&
+        nextAvatarUrl == profile.avatarUrl) {
+      return profile;
+    }
+
+    final updatedProfile = profile.copyWith(
+      firstName: nextFirstName,
+      lastName: nextLastName,
+      avatarUrl: nextAvatarUrl,
+    );
+
+    final payload = {
+      'id': profile.id,
+      ...ProfileModel.toUpdateJson(updatedProfile, avatarUrl: nextAvatarUrl),
+    };
+
+    await supabase.from('profiles').upsert(payload, onConflict: 'id');
+    return updatedProfile;
+  }
+
+  ({String? firstName, String? lastName, String? avatarUrl})
+  _authDefaultsForCurrentUser(String userId) {
+    final authUser = supabase.auth.currentUser;
+    if (authUser == null || authUser.id != userId) {
+      return (firstName: null, lastName: null, avatarUrl: null);
+    }
+
+    final metadata = authUser.userMetadata ?? const <String, dynamic>{};
+    final fullName =
+        _cleanString(metadata['full_name']) ?? _cleanString(metadata['name']);
+    final givenName = _cleanString(metadata['given_name']);
+    final familyName = _cleanString(metadata['family_name']);
+    final parsedName = _splitFullName(fullName);
+
+    return (
+      firstName: givenName ?? parsedName.$1,
+      lastName: familyName ?? parsedName.$2,
+      avatarUrl:
+          _cleanString(metadata['avatar_url']) ??
+          _cleanString(metadata['picture']),
+    );
+  }
+
+  (String?, String?) _splitFullName(String? fullName) {
+    final normalized = _cleanString(fullName);
+    if (normalized == null) return (null, null);
+
+    final parts = normalized
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return (null, null);
+    if (parts.length == 1) return (parts.first, null);
+    return (parts.first, parts.sublist(1).join(' '));
+  }
+
+  bool _hasText(String? value) => value != null && value.trim().isNotEmpty;
+
+  String? _cleanString(dynamic value) {
+    if (value is! String) return null;
+    final normalized = value.trim();
+    return normalized.isEmpty ? null : normalized;
   }
 }

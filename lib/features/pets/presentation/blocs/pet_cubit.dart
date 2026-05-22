@@ -133,6 +133,8 @@ class PetCubit extends Cubit<PetState> {
     }
   }
 
+  void resetPets() => emit(const PetInitial());
+
   String _mapError(Object e) {
     if (e is StorageException) {
       final message = e.message.toLowerCase();

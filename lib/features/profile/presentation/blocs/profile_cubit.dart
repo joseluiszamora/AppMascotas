@@ -65,6 +65,24 @@ class ProfileCubit extends Cubit<ProfileState> {
       return 'No pudimos subir la foto de perfil. Intenta de nuevo.';
     }
 
+    if (e is PostgrestException) {
+      final message = e.message.toLowerCase();
+      if (message.contains('row-level security')) {
+        return 'No tienes permisos para actualizar este perfil.';
+      }
+      if (message.contains('notification_radius_km')) {
+        return 'El radio de notificaciones debe estar entre 1 y 200 km.';
+      }
+      if (e.message.trim().isNotEmpty) {
+        return 'No pudimos actualizar el perfil. ${e.message}';
+      }
+      return 'No pudimos actualizar el perfil. Intenta de nuevo.';
+    }
+
+    if (e is AuthException) {
+      return 'Tu sesión ya no es válida. Inicia sesión de nuevo e inténtalo otra vez.';
+    }
+
     final msg = e.toString().toLowerCase();
     if (msg.contains('network') || msg.contains('socket')) {
       return 'Sin conexión. Verifica tu internet e intenta de nuevo.';

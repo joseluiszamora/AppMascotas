@@ -54,7 +54,12 @@ class AuthProvider {
         throw const AuthFailure('No se pudo autenticar con Supabase.');
       }
 
-      return UserModel.fromSupabaseUser(response.user!);
+      return UserModel.fromAuthData(
+        user: response.user!,
+        fallbackEmail: googleUser.email,
+        fallbackName: googleUser.displayName,
+        fallbackAvatarUrl: googleUser.photoUrl,
+      );
     } on AuthFailure {
       rethrow;
     } on PlatformException catch (e) {
@@ -69,7 +74,16 @@ class AuthProvider {
   }
 
   Future<void> signOut() async {
-    await Future.wait([_supabase.auth.signOut(), _googleSignIn.signOut()]);
+    try {
+      await _supabase.auth.signOut();
+    } finally {
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+      try {
+        await _googleSignIn.disconnect();
+      } catch (_) {}
+    }
   }
 
   String _mapGoogleError(PlatformException e) {

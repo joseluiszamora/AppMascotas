@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -364,10 +363,7 @@ class ReportListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = DateFormat(
-      'd MMM y, HH:mm',
-      'es',
-    ).format(report.occurredAt);
+    final dateLabel = reportRelativeTimeLabel(report.occurredAt);
     final typeColor = report.type == ReportType.lost
         ? AppColors.lostPet
         : AppColors.foundPet;
@@ -708,4 +704,45 @@ class StatusPalette {
 
   final Color foreground;
   final Color background;
+}
+
+String reportRelativeTimeLabel(DateTime dateTime, {DateTime? now}) {
+  final currentTime = now ?? DateTime.now();
+  final difference = currentTime.difference(dateTime);
+
+  if (difference.inSeconds < 0) {
+    return 'Hace un momento';
+  }
+
+  if (difference.inMinutes < 1) {
+    return 'Hace un momento';
+  }
+
+  if (difference.inHours < 1) {
+    final minutes = difference.inMinutes;
+    return minutes == 1 ? 'Hace 1 minuto' : 'Hace $minutes minutos';
+  }
+
+  if (difference.inDays < 1) {
+    final hours = difference.inHours;
+    return hours == 1 ? 'Hace 1 hora' : 'Hace $hours horas';
+  }
+
+  if (difference.inDays < 7) {
+    final days = difference.inDays;
+    return days == 1 ? 'Hace 1 día' : 'Hace $days días';
+  }
+
+  if (difference.inDays < 30) {
+    final weeks = (difference.inDays / 7).floor();
+    return weeks == 1 ? 'Hace 1 semana' : 'Hace $weeks semanas';
+  }
+
+  if (difference.inDays < 365) {
+    final months = (difference.inDays / 30).floor();
+    return months <= 1 ? 'Hace 1 mes' : 'Hace $months meses';
+  }
+
+  final years = (difference.inDays / 365).floor();
+  return years == 1 ? 'Hace 1 año' : 'Hace $years años';
 }

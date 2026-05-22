@@ -10,6 +10,7 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/map/presentation/pages/home_page.dart';
 import '../../features/pets/domain/entities/pet_entity.dart';
+import '../../features/pets/presentation/blocs/pet_cubit.dart';
 import '../../features/pets/presentation/screens/pet_form_screen.dart';
 import '../../features/profile/domain/entities/profile_entity.dart';
 import '../../features/profile/presentation/blocs/profile_cubit.dart';
@@ -40,10 +41,11 @@ class AppRouter {
   static GoRouter routerOf(BuildContext context) {
     final authBloc = context.read<AuthBloc>();
     final profileCubit = context.read<ProfileCubit>();
+    final petCubit = context.read<PetCubit>();
 
     return GoRouter(
       initialLocation: AppRoutes.home,
-      refreshListenable: _RouterNotifier(authBloc, profileCubit),
+      refreshListenable: _RouterNotifier(authBloc, profileCubit, petCubit),
       redirect: (ctx, state) {
         final authState = authBloc.state;
         final profileState = profileCubit.state;
@@ -175,12 +177,17 @@ class AppRouter {
 /// Cuando el usuario se autentica, dispara la carga del perfil.
 /// Cuando cierra sesión, reinicia el estado del perfil.
 class _RouterNotifier extends ChangeNotifier {
-  _RouterNotifier(AuthBloc authBloc, ProfileCubit profileCubit) {
+  _RouterNotifier(
+    AuthBloc authBloc,
+    ProfileCubit profileCubit,
+    PetCubit petCubit,
+  ) {
     _authSub = authBloc.stream.listen((authState) {
       if (authState is AuthAuthenticated) {
         profileCubit.loadProfile(authState.user.id);
       } else if (authState is AuthUnauthenticated) {
         profileCubit.resetProfile();
+        petCubit.resetPets();
       }
       notifyListeners();
     });
