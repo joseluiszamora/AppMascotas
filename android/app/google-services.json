@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "68837437433-qbhg7i38vgf7dn5g6jcnj5nqnscpcvo8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jzamoradev.pets_app_mobile",
+            "certificate_hash": "0887dade59821b756952476785a02f8adb213589"
+          }
+        },
+        {
+          "client_id": "68837437433-t5ff0re38ok40qo0ghotcou8h6dpfvfk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jzamoradev.pets_app_mobile",
+            "certificate_hash": "d3127c85bb2f1d290896c84d238e3348a813aa56"
+          }
+        },
+        {
           "client_id": "68837437433-qd5n2abfr8r9mc6onopl6oqcodka750u.apps.googleusercontent.com",
           "client_type": 3
         }
