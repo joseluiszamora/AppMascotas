@@ -13,13 +13,14 @@
 
 ## Usuarios
 
-1. Un usuario debe iniciar sesión con Google para usar las funciones principales.
-2. Un usuario puede tener una o varias mascotas registradas.
-3. Un usuario puede crear reportes de mascotas perdidas.
-4. Un usuario puede crear reportes de mascotas encontradas.
-5. Un usuario puede configurar sus preferencias de notificación.
-6. Un usuario puede configurar su radio de alertas.
-7. Un usuario puede cerrar sesión.
+1. Un visitante puede consultar reportes públicos y detalles visibles sin iniciar sesión.
+2. Un usuario debe iniciar sesión con Google para crear reportes, registrar mascotas, ver su perfil, ver sus reportes y recibir notificaciones.
+3. Un usuario puede tener una o varias mascotas registradas.
+4. Un usuario puede crear reportes de mascotas perdidas.
+5. Un usuario puede crear reportes de mascotas encontradas.
+6. Un usuario puede configurar sus preferencias de notificación.
+7. Un usuario puede configurar su radio de alertas.
+8. Un usuario puede cerrar sesión.
 
 ## Perfil de usuario
 
@@ -105,6 +106,7 @@ Reglas:
 6. Los reportes resueltos pueden mantenerse como historial.
 7. Los reportes deben poder compartirse por WhatsApp, Facebook u otros canales.
 8. Un reporte debe poder marcarse como resuelto.
+9. Los reportes activos y en revisión pueden ser consultados por visitantes sin sesión.
 
 ## Geolocalización
 

@@ -18,6 +18,7 @@ Funcionalidades:
 - Login con Google.
 - Cierre de sesión.
 - Persistencia de sesión.
+- Exploración pública de inicio, reportes y detalle de reportes sin sesión.
 
 ### 2. Perfil de usuario
 
@@ -76,6 +77,7 @@ Funcionalidades:
 
 - Reportar mascota perdida.
 - Reportar mascota encontrada.
+- Ver reportes comunitarios sin iniciar sesión.
 - Geolocalización del reporte.
 - Fecha y hora del avistamiento o pérdida.
 - Subida de fotografías.

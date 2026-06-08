@@ -34,6 +34,12 @@ class _HomePageState extends State<HomePage> {
   int _mapRefreshKey = 0;
 
   void _openPetsSection() {
+    if (!_ensureAuthenticated(
+      message: 'Inicia sesión con Google para gestionar tus mascotas.',
+    )) {
+      return;
+    }
+
     setState(() {
       _currentIndex = 1;
     });
@@ -46,50 +52,91 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  bool _isPrivateTab(int index) => index == 1 || index == 3;
+
+  bool _ensureAuthenticated({
+    required String message,
+    String redirectLocation = AppRoutes.home,
+  }) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) return true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.primaryDark,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    context.push(AppRoutes.loginWithRedirect(redirectLocation));
+    return false;
+  }
+
+  void _selectTab(int index) {
+    if (_isPrivateTab(index) &&
+        !_ensureAuthenticated(
+          message: index == 1
+              ? 'Inicia sesión con Google para gestionar tus mascotas.'
+              : 'Inicia sesión con Google para ver tu perfil.',
+        )) {
+      return;
+    }
+
+    setState(() {
+      _currentIndex = index;
+      if (index == 2) {
+        _mapRefreshKey++;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final isLoading = state is AuthLoading;
-        final user = state is AuthAuthenticated ? state.user : null;
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (_, current) => current is AuthUnauthenticated,
+      listener: (_, _) {
+        if (_isPrivateTab(_currentIndex)) {
+          setState(() => _currentIndex = 0);
+        }
+      },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          final isLoading = state is AuthLoading;
+          final user = state is AuthAuthenticated ? state.user : null;
 
-        return Stack(
-          children: [
-            Scaffold(
-              backgroundColor: AppColors.background,
-              body: IndexedStack(
-                index: _currentIndex,
-                children: [
-                  _HomeTab(
-                    user: user,
-                    onOpenPetsSection: _openPetsSection,
-                    onOpenReportsSection: _openReportsSection,
-                  ),
-                  const PetsPage(),
-                  ReportsMapPage(refreshToken: _mapRefreshKey),
-                  _ProfileTab(user: user, isAuthLoading: isLoading),
-                ],
-              ),
-              bottomNavigationBar: _BottomNav(
-                currentIndex: _currentIndex,
-                onTap: (i) => setState(() {
-                  _currentIndex = i;
-                  if (i == 2) {
-                    _mapRefreshKey++;
-                  }
-                }),
-              ),
-            ),
-            if (isLoading)
-              const ColoredBox(
-                color: Color(0x55000000),
-                child: Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
+          return Stack(
+            children: [
+              Scaffold(
+                backgroundColor: AppColors.background,
+                body: IndexedStack(
+                  index: _currentIndex,
+                  children: [
+                    _HomeTab(
+                      user: user,
+                      onOpenPetsSection: _openPetsSection,
+                      onOpenReportsSection: _openReportsSection,
+                    ),
+                    const PetsPage(),
+                    ReportsMapPage(refreshToken: _mapRefreshKey),
+                    _ProfileTab(user: user, isAuthLoading: isLoading),
+                  ],
+                ),
+                bottomNavigationBar: _BottomNav(
+                  currentIndex: _currentIndex,
+                  onTap: _selectTab,
                 ),
               ),
-          ],
-        );
-      },
+              if (isLoading)
+                const ColoredBox(
+                  color: Color(0x55000000),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -117,12 +164,26 @@ class _HomeTabState extends State<_HomeTab> {
   int _notificationsRefreshKey = 0;
 
   Future<void> _openNotifications() async {
+    if (!_ensureAuthenticated(
+      message: 'Inicia sesión con Google para ver tus notificaciones.',
+      redirectLocation: AppRoutes.notifications,
+    )) {
+      return;
+    }
+
     await context.push<bool>(AppRoutes.notifications);
     if (!mounted) return;
     setState(() => _notificationsRefreshKey++);
   }
 
   Future<void> _openLostReportForm() async {
+    if (!_ensureAuthenticated(
+      message: 'Inicia sesión con Google para crear un reporte.',
+      redirectLocation: AppRoutes.lostReportForm,
+    )) {
+      return;
+    }
+
     final created = await context.push<bool>(AppRoutes.lostReportForm);
     if (created == true && mounted) {
       setState(() => _reportsRefreshKey++);
@@ -130,10 +191,35 @@ class _HomeTabState extends State<_HomeTab> {
   }
 
   Future<void> _openFoundReportForm() async {
+    if (!_ensureAuthenticated(
+      message: 'Inicia sesión con Google para crear un reporte.',
+      redirectLocation: AppRoutes.foundReportForm,
+    )) {
+      return;
+    }
+
     final created = await context.push<bool>(AppRoutes.foundReportForm);
     if (created == true && mounted) {
       setState(() => _reportsRefreshKey++);
     }
+  }
+
+  bool _ensureAuthenticated({
+    required String message,
+    required String redirectLocation,
+  }) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) return true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.primaryDark,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    context.push(AppRoutes.loginWithRedirect(redirectLocation));
+    return false;
   }
 
   @override

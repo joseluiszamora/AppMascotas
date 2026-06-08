@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -10,11 +11,14 @@ import 'package:latlong2/latlong.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/service_locator.dart';
+import '../../../auth/presentation/blocs/auth/auth_bloc.dart';
+import '../../../auth/presentation/blocs/auth/auth_state.dart';
 import '../../../reports/domain/entities/report_entity.dart';
 import '../../../reports/domain/entities/report_map_query.dart';
 import '../../../reports/domain/usecases/get_map_reports.dart';
 import '../../../reports/presentation/widgets/all_reports_section.dart';
 import '../../../reports/presentation/widgets/my_reports_section.dart';
+import '../../../reports/presentation/widgets/report_list_components.dart';
 import '../../../reports/presentation/utils/report_actions.dart';
 
 class ReportsMapPage extends StatefulWidget {
@@ -105,7 +109,9 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     try {
       final isEnabled = await Geolocator.isLocationServiceEnabled();
       if (!isEnabled) {
-        _showMessage('Activa la ubicación del dispositivo para centrar el mapa.');
+        _showMessage(
+          'Activa la ubicación del dispositivo para centrar el mapa.',
+        );
         return;
       }
 
@@ -113,13 +119,16 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         _showMessage('No pudimos acceder a tu ubicación actual.');
         return;
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       if (!mounted) return;
 
@@ -146,7 +155,10 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     final dLon = _toRadians(lon2 - lon1);
     final a =
         math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(_toRadians(lat1)) * math.cos(_toRadians(lat2)) * math.sin(dLon / 2) * math.sin(dLon / 2);
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     return earthRadiusKm * c;
   }
@@ -240,8 +252,12 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     final buckets = <String, _IncidenceAccumulator>{};
 
     for (final report in reports) {
-      final bucketLat = double.parse(report.approximateLatitude.toStringAsFixed(2));
-      final bucketLon = double.parse(report.approximateLongitude.toStringAsFixed(2));
+      final bucketLat = double.parse(
+        report.approximateLatitude.toStringAsFixed(2),
+      );
+      final bucketLon = double.parse(
+        report.approximateLongitude.toStringAsFixed(2),
+      );
       final key = '$bucketLat,$bucketLon';
       final current = buckets[key];
       if (current == null) {
@@ -257,19 +273,21 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
       }
     }
 
-    final zones = buckets.values
-        .map(
-          (bucket) => _IncidenceZone(
-            center: LatLng(bucket.latitude, bucket.longitude),
-            count: bucket.count,
-            label: bucket.labels.firstWhere(
-              (label) => label.trim().isNotEmpty,
-              orElse: () => '${bucket.latitude.toStringAsFixed(2)}, ${bucket.longitude.toStringAsFixed(2)}',
-            ),
-          ),
-        )
-        .toList()
-      ..sort((a, b) => b.count.compareTo(a.count));
+    final zones =
+        buckets.values
+            .map(
+              (bucket) => _IncidenceZone(
+                center: LatLng(bucket.latitude, bucket.longitude),
+                count: bucket.count,
+                label: bucket.labels.firstWhere(
+                  (label) => label.trim().isNotEmpty,
+                  orElse: () =>
+                      '${bucket.latitude.toStringAsFixed(2)}, ${bucket.longitude.toStringAsFixed(2)}',
+                ),
+              ),
+            )
+            .toList()
+          ..sort((a, b) => b.count.compareTo(a.count));
 
     return zones;
   }
@@ -297,90 +315,123 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     return total;
   }
 
+  bool _ensureAuthenticatedForMyReports() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) return true;
+
+    _showMessage('Inicia sesión con Google para ver tus reportes.');
+    context.push(AppRoutes.loginWithRedirect(AppRoutes.home));
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Reportes',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.4,
+    final isLoggedIn = context.watch<AuthBloc>().state is AuthAuthenticated;
+
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (_, current) => current is AuthUnauthenticated,
+      listener: (_, _) {
+        if (_section == _ReportsSection.mine) {
+          setState(() => _section = _ReportsSection.all);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Reportes',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.4,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _section == _ReportsSection.all
-                        ? 'Listado principal con reportes tuyos y de la comunidad'
-                        : _section == _ReportsSection.map
-                        ? 'OSM · reportes activos cercanos'
-                        : 'Tus reportes con filtros por tipo, mascota y estado',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: 4),
+                    Text(
+                      _section == _ReportsSection.all
+                          ? 'Listado principal con reportes de la comunidad'
+                          : _section == _ReportsSection.map
+                          ? 'OSM · reportes activos cercanos'
+                          : 'Tus reportes con filtros por tipo, mascota y estado',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: SegmentedButton<_ReportsSection>(
-                segments: const [
-                  ButtonSegment<_ReportsSection>(
-                    value: _ReportsSection.all,
-                    icon: Icon(Icons.view_list_rounded),
-                    label: Text('Todos'),
-                  ),
-                  ButtonSegment<_ReportsSection>(
-                    value: _ReportsSection.map,
-                    icon: Icon(Icons.map_rounded),
-                    label: Text('Mapa'),
-                  ),
-                  ButtonSegment<_ReportsSection>(
-                    value: _ReportsSection.mine,
-                    icon: Icon(Icons.assignment_rounded),
-                    label: Text('Mis reportes'),
-                  ),
-                ],
-                selected: <_ReportsSection>{_section},
-                onSelectionChanged: (selection) {
-                  setState(() => _section = selection.first);
-                },
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith(
-                    (states) => states.contains(WidgetState.selected)
-                        ? AppColors.primary.withAlpha(26)
-                        : AppColors.surface,
-                  ),
-                  side: WidgetStateProperty.all(
-                    const BorderSide(color: AppColors.border),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SegmentedButton<_ReportsSection>(
+                  segments: const [
+                    ButtonSegment<_ReportsSection>(
+                      value: _ReportsSection.all,
+                      icon: Icon(Icons.view_list_rounded),
+                      label: Text('Todos'),
+                    ),
+                    ButtonSegment<_ReportsSection>(
+                      value: _ReportsSection.map,
+                      icon: Icon(Icons.map_rounded),
+                      label: Text('Mapa'),
+                    ),
+                    ButtonSegment<_ReportsSection>(
+                      value: _ReportsSection.mine,
+                      icon: Icon(Icons.assignment_rounded),
+                      label: Text('Mis reportes'),
+                    ),
+                  ],
+                  selected: <_ReportsSection>{_section},
+                  onSelectionChanged: (selection) {
+                    final nextSection = selection.first;
+                    if (nextSection == _ReportsSection.mine && !isLoggedIn) {
+                      _ensureAuthenticatedForMyReports();
+                      return;
+                    }
+                    setState(() => _section = nextSection);
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith(
+                      (states) => states.contains(WidgetState.selected)
+                          ? AppColors.primary.withAlpha(26)
+                          : AppColors.surface,
+                    ),
+                    side: WidgetStateProperty.all(
+                      const BorderSide(color: AppColors.border),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: IndexedStack(
-                index: _section.index,
-                children: [
-                  AllReportsSection(refreshToken: widget.refreshToken),
-                  _buildMapSection(),
-                  MyReportsSection(refreshToken: widget.refreshToken),
-                ],
+              const SizedBox(height: 12),
+              Expanded(
+                child: IndexedStack(
+                  index: _section.index,
+                  children: [
+                    AllReportsSection(refreshToken: widget.refreshToken),
+                    _buildMapSection(),
+                    isLoggedIn
+                        ? MyReportsSection(refreshToken: widget.refreshToken)
+                        : ReportListFeedbackState(
+                            icon: Icons.lock_outline_rounded,
+                            title: 'Inicia sesión para ver tus reportes',
+                            message:
+                                'El historial personal solo está disponible cuando entras con Google.',
+                            actionLabel: 'Iniciar sesión',
+                            onAction: _ensureAuthenticatedForMyReports,
+                          ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -541,7 +592,8 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                 return _MapFeedbackState(
                   icon: Icons.wifi_off_rounded,
                   title: 'No pudimos cargar el mapa',
-                  message: 'Intenta de nuevo para actualizar los reportes activos.',
+                  message:
+                      'Intenta de nuevo para actualizar los reportes activos.',
                   actionLabel: 'Reintentar',
                   onAction: _reloadReports,
                 );
@@ -552,7 +604,8 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                 return _MapFeedbackState(
                   icon: Icons.location_searching_rounded,
                   title: 'Sin resultados con estos filtros',
-                  message: 'Ajusta el radio o los filtros para ver más reportes.',
+                  message:
+                      'Ajusta el radio o los filtros para ver más reportes.',
                   actionLabel: 'Limpiar filtros',
                   onAction: _resetFilters,
                 );
@@ -691,7 +744,9 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                           heroTag: 'map-center',
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          onPressed: _isLocating ? null : _centerOnCurrentLocation,
+                          onPressed: _isLocating
+                              ? null
+                              : _centerOnCurrentLocation,
                           child: _isLocating
                               ? const SizedBox(
                                   width: 18,
@@ -723,8 +778,12 @@ class _ReportMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = report.type == ReportType.lost ? AppColors.lostPet : AppColors.foundPet;
-    final icon = report.type == ReportType.lost ? Icons.search_off_rounded : Icons.favorite_rounded;
+    final color = report.type == ReportType.lost
+        ? AppColors.lostPet
+        : AppColors.foundPet;
+    final icon = report.type == ReportType.lost
+        ? Icons.search_off_rounded
+        : Icons.favorite_rounded;
 
     return Container(
       decoration: BoxDecoration(
@@ -790,7 +849,10 @@ class _MapFeedbackState extends StatelessWidget {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 14),
               TextButton(onPressed: onAction, child: Text(actionLabel)),
@@ -895,11 +957,21 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
   late ReportPetSize? _size = widget.size;
   late ReportStatus? _status = widget.status;
 
-  late final TextEditingController _zoneCtrl = TextEditingController(text: widget.zone);
-  late final TextEditingController _neighborhoodCtrl = TextEditingController(text: widget.neighborhood);
-  late final TextEditingController _cityCtrl = TextEditingController(text: widget.city);
-  late final TextEditingController _breedCtrl = TextEditingController(text: widget.breed);
-  late final TextEditingController _colorCtrl = TextEditingController(text: widget.color);
+  late final TextEditingController _zoneCtrl = TextEditingController(
+    text: widget.zone,
+  );
+  late final TextEditingController _neighborhoodCtrl = TextEditingController(
+    text: widget.neighborhood,
+  );
+  late final TextEditingController _cityCtrl = TextEditingController(
+    text: widget.city,
+  );
+  late final TextEditingController _breedCtrl = TextEditingController(
+    text: widget.breed,
+  );
+  late final TextEditingController _colorCtrl = TextEditingController(
+    text: widget.color,
+  );
 
   @override
   void dispose() {
@@ -915,7 +987,9 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: Container(
           decoration: const BoxDecoration(
             color: AppColors.background,
@@ -952,7 +1026,8 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                       child: FilterChip(
                         label: const Text('Perdidas'),
                         selected: _includeLost,
-                        onSelected: (value) => setState(() => _includeLost = value),
+                        onSelected: (value) =>
+                            setState(() => _includeLost = value),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -960,17 +1035,36 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                       child: FilterChip(
                         label: const Text('Encontradas'),
                         selected: _includeFound,
-                        onSelected: (value) => setState(() => _includeFound = value),
+                        onSelected: (value) =>
+                            setState(() => _includeFound = value),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                _LabeledField(label: 'Zona', child: TextField(controller: _zoneCtrl, decoration: _sheetInput('Ej. norte, centro...'))),
+                _LabeledField(
+                  label: 'Zona',
+                  child: TextField(
+                    controller: _zoneCtrl,
+                    decoration: _sheetInput('Ej. norte, centro...'),
+                  ),
+                ),
                 const SizedBox(height: 12),
-                _LabeledField(label: 'Barrio', child: TextField(controller: _neighborhoodCtrl, decoration: _sheetInput('Ej. Chapinero'))),
+                _LabeledField(
+                  label: 'Barrio',
+                  child: TextField(
+                    controller: _neighborhoodCtrl,
+                    decoration: _sheetInput('Ej. Chapinero'),
+                  ),
+                ),
                 const SizedBox(height: 12),
-                _LabeledField(label: 'Ciudad', child: TextField(controller: _cityCtrl, decoration: _sheetInput('Ej. Bogotá'))),
+                _LabeledField(
+                  label: 'Ciudad',
+                  child: TextField(
+                    controller: _cityCtrl,
+                    decoration: _sheetInput('Ej. Bogotá'),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 _LabeledField(
                   label: 'Radio (${_radiusKm.toStringAsFixed(0)} km)',
@@ -990,18 +1084,39 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                     initialValue: _petType,
                     items: const [
                       DropdownMenuItem(value: null, child: Text('Todos')),
-                      DropdownMenuItem(value: ReportPetType.dog, child: Text('Perro')),
-                      DropdownMenuItem(value: ReportPetType.cat, child: Text('Gato')),
-                      DropdownMenuItem(value: ReportPetType.other, child: Text('Otro')),
+                      DropdownMenuItem(
+                        value: ReportPetType.dog,
+                        child: Text('Perro'),
+                      ),
+                      DropdownMenuItem(
+                        value: ReportPetType.cat,
+                        child: Text('Gato'),
+                      ),
+                      DropdownMenuItem(
+                        value: ReportPetType.other,
+                        child: Text('Otro'),
+                      ),
                     ],
                     onChanged: (value) => setState(() => _petType = value),
                     decoration: _sheetInput('Selecciona'),
                   ),
                 ),
                 const SizedBox(height: 12),
-                _LabeledField(label: 'Raza', child: TextField(controller: _breedCtrl, decoration: _sheetInput('Ej. Labrador'))),
+                _LabeledField(
+                  label: 'Raza',
+                  child: TextField(
+                    controller: _breedCtrl,
+                    decoration: _sheetInput('Ej. Labrador'),
+                  ),
+                ),
                 const SizedBox(height: 12),
-                _LabeledField(label: 'Color', child: TextField(controller: _colorCtrl, decoration: _sheetInput('Ej. negro'))),
+                _LabeledField(
+                  label: 'Color',
+                  child: TextField(
+                    controller: _colorCtrl,
+                    decoration: _sheetInput('Ej. negro'),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 _LabeledField(
                   label: 'Tamaño',
@@ -1009,10 +1124,22 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                     initialValue: _size,
                     items: const [
                       DropdownMenuItem(value: null, child: Text('Todos')),
-                      DropdownMenuItem(value: ReportPetSize.small, child: Text('Pequeño')),
-                      DropdownMenuItem(value: ReportPetSize.medium, child: Text('Mediano')),
-                      DropdownMenuItem(value: ReportPetSize.large, child: Text('Grande')),
-                      DropdownMenuItem(value: ReportPetSize.extraLarge, child: Text('Extra grande')),
+                      DropdownMenuItem(
+                        value: ReportPetSize.small,
+                        child: Text('Pequeño'),
+                      ),
+                      DropdownMenuItem(
+                        value: ReportPetSize.medium,
+                        child: Text('Mediano'),
+                      ),
+                      DropdownMenuItem(
+                        value: ReportPetSize.large,
+                        child: Text('Grande'),
+                      ),
+                      DropdownMenuItem(
+                        value: ReportPetSize.extraLarge,
+                        child: Text('Extra grande'),
+                      ),
                     ],
                     onChanged: (value) => setState(() => _size = value),
                     decoration: _sheetInput('Selecciona'),
@@ -1025,8 +1152,14 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                     initialValue: _status,
                     items: const [
                       DropdownMenuItem(value: null, child: Text('Todos')),
-                      DropdownMenuItem(value: ReportStatus.active, child: Text('Activo')),
-                      DropdownMenuItem(value: ReportStatus.underReview, child: Text('En revisión')),
+                      DropdownMenuItem(
+                        value: ReportStatus.active,
+                        child: Text('Activo'),
+                      ),
+                      DropdownMenuItem(
+                        value: ReportStatus.underReview,
+                        child: Text('En revisión'),
+                      ),
                     ],
                     onChanged: (value) => setState(() => _status = value),
                     decoration: _sheetInput('Selecciona'),
@@ -1075,7 +1208,9 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                             ),
                           );
                         },
-                        style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                        ),
                         child: const Text('Aplicar'),
                       ),
                     ),
@@ -1158,10 +1293,17 @@ class _ReportDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = DateFormat('d MMM y, HH:mm', 'es').format(report.occurredAt);
+    final dateLabel = DateFormat(
+      'd MMM y, HH:mm',
+      'es',
+    ).format(report.occurredAt);
     final title = reportTitle(report);
-    final badgeColor = report.type == ReportType.lost ? AppColors.lostPet : AppColors.foundPet;
-    final badgeBg = report.type == ReportType.lost ? AppColors.pastelPink : AppColors.pastelGreen;
+    final badgeColor = report.type == ReportType.lost
+        ? AppColors.lostPet
+        : AppColors.foundPet;
+    final badgeBg = report.type == ReportType.lost
+        ? AppColors.pastelPink
+        : AppColors.pastelGreen;
 
     return SafeArea(
       child: Container(
@@ -1208,7 +1350,9 @@ class _ReportDetailSheet extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      report.type == ReportType.lost ? Icons.search_off_rounded : Icons.favorite_rounded,
+                      report.type == ReportType.lost
+                          ? Icons.search_off_rounded
+                          : Icons.favorite_rounded,
                       color: badgeColor,
                       size: 34,
                     ),
@@ -1219,13 +1363,18 @@ class _ReportDetailSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: badgeBg,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          report.type == ReportType.lost ? 'Perdida' : 'Encontrada',
+                          report.type == ReportType.lost
+                              ? 'Perdida'
+                              : 'Encontrada',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -1245,7 +1394,10 @@ class _ReportDetailSheet extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         reportLocationLabel(report),
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -1258,15 +1410,22 @@ class _ReportDetailSheet extends StatelessWidget {
               padding: const EdgeInsets.only(top: 10),
               child: _DetailRow(
                 icon: Icons.pin_drop_outlined,
-                text: 'Punto aprox. ${reportApproximateCoordinatesLabel(report)}',
+                text:
+                    'Punto aprox. ${reportApproximateCoordinatesLabel(report)}',
               ),
             ),
             if (report.petBreed != null && report.petBreed!.trim().isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: _DetailRow(icon: Icons.pets_rounded, text: report.petBreed!),
+                child: _DetailRow(
+                  icon: Icons.pets_rounded,
+                  text: report.petBreed!,
+                ),
               ),
-            if ((report.description ?? report.foundPetDescription)?.trim().isNotEmpty == true)
+            if ((report.description ?? report.foundPetDescription)
+                    ?.trim()
+                    .isNotEmpty ==
+                true)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
@@ -1333,7 +1492,10 @@ class _DetailRow extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
       ],
@@ -1376,7 +1538,9 @@ class _MapStatsCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            viewMode == _MapViewMode.markers ? 'Resultados visibles' : 'Zonas de mayor incidencia',
+            viewMode == _MapViewMode.markers
+                ? 'Resultados visibles'
+                : 'Zonas de mayor incidencia',
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,

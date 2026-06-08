@@ -18,6 +18,7 @@ Componentes:
 Acciones:
 
 - Iniciar sesión con Google.
+- Continuar explorando reportes públicos sin iniciar sesión.
 - Aceptar permisos básicos.
 - Crear sesión persistente.
 
@@ -44,6 +45,7 @@ Acciones:
 - Crear reporte.
 - Ver mapa.
 - Ver notificaciones.
+- Explorar reportes públicos sin iniciar sesión.
 
 ---
 

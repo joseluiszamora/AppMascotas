@@ -33,6 +33,10 @@ class AppRoutes {
   static const notifications = '/notifications';
 
   static String reportDetail(String reportId) => '/reports/$reportId';
+
+  static String loginWithRedirect(String from) {
+    return Uri(path: login, queryParameters: {'from': from}).toString();
+  }
 }
 
 class AppRouter {
@@ -57,17 +61,40 @@ class AppRouter {
         final isOnLogin = loc == AppRoutes.login;
         final isOnSetup = loc == AppRoutes.profileSetup;
         final isOnEdit = loc == AppRoutes.profileEdit;
+        final path = state.uri.path;
+        final isReportDetail =
+            path.startsWith('/reports/') &&
+            path.split('/').length == 3 &&
+            path != AppRoutes.lostReportForm &&
+            path != AppRoutes.foundReportForm;
+        final isPublicRoute =
+            isOnLogin || path == AppRoutes.home || isReportDetail;
+        final redirectTarget = _safeRedirectTarget(
+          state.uri.queryParameters['from'],
+        );
 
         // Esperando que se resuelva el estado de autenticación
         if (isInitialAuth) return null;
 
-        // No autenticado → login
-        if (!isLoggedIn && !isOnLogin) return AppRoutes.login;
+        // Invitado: puede explorar inicio, reportes y detalles públicos.
+        if (!isLoggedIn && !isPublicRoute) {
+          return AppRoutes.loginWithRedirect(state.uri.toString());
+        }
 
-        // Autenticado en la pantalla de login → home (el check de perfil ocurrirá desde ahí)
-        if (isLoggedIn && isOnLogin) return AppRoutes.home;
+        // Autenticado en login: continuar hacia la acción que disparó el acceso.
+        if (isLoggedIn && isOnLogin) {
+          if (profileState is ProfileInitial ||
+              profileState is ProfileLoading) {
+            return null;
+          }
+          if (profileState is ProfileLoaded &&
+              !profileState.profile.isComplete) {
+            return AppRoutes.profileSetup;
+          }
+          return redirectTarget ?? AppRoutes.home;
+        }
 
-        // La pantalla de edición de perfil es siempre accesible
+        // La pantalla de edición de perfil requiere sesión, pero no bloquea por setup.
         if (isOnEdit) return null;
 
         // ── Verificación de completitud del perfil ──
@@ -171,6 +198,15 @@ class AppRouter {
       ],
     );
   }
+
+  static String? _safeRedirectTarget(String? from) {
+    if (from == null || from.isEmpty) return null;
+    if (!from.startsWith('/') || from.startsWith('//')) return null;
+    if (from == AppRoutes.login || from.startsWith('${AppRoutes.login}?')) {
+      return null;
+    }
+    return from;
+  }
 }
 
 /// Escucha [AuthBloc] y [ProfileCubit] para refrescar el router.
@@ -182,6 +218,11 @@ class _RouterNotifier extends ChangeNotifier {
     ProfileCubit profileCubit,
     PetCubit petCubit,
   ) {
+    final currentAuthState = authBloc.state;
+    if (currentAuthState is AuthAuthenticated) {
+      profileCubit.loadProfile(currentAuthState.user.id);
+    }
+
     _authSub = authBloc.stream.listen((authState) {
       if (authState is AuthAuthenticated) {
         profileCubit.loadProfile(authState.user.id);

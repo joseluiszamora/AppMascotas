@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/service_locator.dart';
 import '../../domain/entities/report_entity.dart';
@@ -28,7 +31,9 @@ class _MyReportsSectionState extends State<MyReportsSection> {
   @override
   void initState() {
     super.initState();
-    _future = _loadReports();
+    _future = _isAuthenticated()
+        ? _loadReports()
+        : Future.value(const <ReportEntity>[]);
   }
 
   @override
@@ -43,10 +48,25 @@ class _MyReportsSectionState extends State<MyReportsSection> {
     return sl<GetMyReports>()();
   }
 
+  bool _isAuthenticated() {
+    return sl<SupabaseClient>().auth.currentUser != null;
+  }
+
   void _reload() {
+    if (!_isAuthenticated()) {
+      setState(() {
+        _future = Future.value(const <ReportEntity>[]);
+      });
+      return;
+    }
+
     setState(() {
       _future = _loadReports();
     });
+  }
+
+  void _openLogin() {
+    context.push(AppRoutes.loginWithRedirect(AppRoutes.home));
   }
 
   int _activeFilterCount() {
@@ -132,6 +152,17 @@ class _MyReportsSectionState extends State<MyReportsSection> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isAuthenticated()) {
+      return ReportListFeedbackState(
+        icon: Icons.lock_outline_rounded,
+        title: 'Inicia sesión para ver tus reportes',
+        message:
+            'Tu historial personal se carga cuando entras con tu cuenta de Google.',
+        actionLabel: 'Iniciar sesión',
+        onAction: _openLogin,
+      );
+    }
+
     return Column(
       children: [
         Padding(
