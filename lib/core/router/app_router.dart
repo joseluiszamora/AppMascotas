@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../theme/app_colors.dart';
 import '../utils/service_locator.dart';
 import '../../features/auth/presentation/blocs/auth/auth_bloc.dart';
 import '../../features/auth/presentation/blocs/auth/auth_state.dart';
@@ -124,18 +125,12 @@ class AppRouter {
         return null;
       },
       routes: [
-        GoRoute(
-          path: AppRoutes.login,
-          builder: (context, _) => const LoginPage(),
-        ),
-        GoRoute(
-          path: AppRoutes.home,
-          builder: (context, _) => const HomePage(),
-        ),
+        GoRoute(path: AppRoutes.login, builder: (context, _) => LoginPage()),
+        GoRoute(path: AppRoutes.home, builder: (context, _) => HomePage()),
         GoRoute(
           path: AppRoutes.profileSetup,
           // El ProfileCubit global ya tiene el perfil cargado
-          builder: (context, _) => const ProfileSetupPage(),
+          builder: (context, _) => ProfileSetupPage(),
         ),
         GoRoute(
           path: AppRoutes.profileEdit,
@@ -150,8 +145,8 @@ class AppRouter {
                 };
 
             if (profile == null) {
-              return const Scaffold(
-                backgroundColor: Colors.white,
+              return Scaffold(
+                backgroundColor: context.appColors.background,
                 body: Center(child: CircularProgressIndicator()),
               );
             }
@@ -180,14 +175,14 @@ class AppRouter {
           path: AppRoutes.foundReportForm,
           builder: (context, state) => BlocProvider<ReportFormCubit>(
             create: (_) => sl<ReportFormCubit>(),
-            child: const FoundReportFormScreen(),
+            child: FoundReportFormScreen(),
           ),
         ),
         GoRoute(
           path: AppRoutes.notifications,
           builder: (context, state) => BlocProvider<NotificationCubit>(
             create: (_) => sl<NotificationCubit>(),
-            child: const NotificationsPage(),
+            child: NotificationsPage(),
           ),
         ),
         GoRoute(

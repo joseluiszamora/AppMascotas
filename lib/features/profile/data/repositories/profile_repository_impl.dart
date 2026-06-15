@@ -5,7 +5,7 @@ import '../../domain/repositories/profile_repository.dart';
 import '../providers/profile_provider.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
-  const ProfileRepositoryImpl(this._provider);
+  ProfileRepositoryImpl(this._provider);
 
   final ProfileProvider _provider;
 

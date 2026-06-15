@@ -9,7 +9,7 @@ import '../../domain/entities/report_map_query.dart';
 import '../models/report_model.dart';
 
 class ReportProvider {
-  const ReportProvider({required this.supabase});
+  ReportProvider({required this.supabase});
 
   final SupabaseClient supabase;
   static const _storageBucket = 'report-photos';
@@ -27,7 +27,7 @@ class ReportProvider {
     final normalizedExt = ext.toLowerCase();
     final mimeType = _supportedMimeTypes[normalizedExt];
     if (mimeType == null) {
-      throw const StorageException(
+      throw StorageException(
         'Formato de imagen no soportado. Usa JPG, PNG, WEBP, GIF o HEIC.',
         statusCode: '415',
       );
@@ -84,7 +84,7 @@ class ReportProvider {
       }
     }
 
-    throw const StorageException(
+    throw StorageException(
       'Formato de imagen no soportado. Usa JPG, PNG, WEBP, GIF o HEIC.',
       statusCode: '415',
     );
@@ -165,7 +165,7 @@ class ReportProvider {
 
   Future<List<ReportEntity>> getMapReports(ReportMapQuery query) async {
     if (!query.includeLost && !query.includeFound) {
-      return const [];
+      return [];
     }
 
     final bounds = _boundsForRadius(
@@ -442,7 +442,7 @@ class ReportProvider {
 }
 
 class _GeoBounds {
-  const _GeoBounds({
+  _GeoBounds({
     required this.minLatitude,
     required this.maxLatitude,
     required this.minLongitude,

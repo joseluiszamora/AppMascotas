@@ -7,7 +7,7 @@ import '../../domain/entities/profile_entity.dart';
 import '../models/profile_model.dart';
 
 class ProfileProvider {
-  const ProfileProvider({required this.supabase});
+  ProfileProvider({required this.supabase});
 
   final SupabaseClient supabase;
   static const _storageBucket = 'profile-avatars';
@@ -89,7 +89,7 @@ class ProfileProvider {
     final normalizedExt = ext.toLowerCase();
     final mimeType = _supportedMimeTypes[normalizedExt];
     if (mimeType == null) {
-      throw const StorageException(
+      throw StorageException(
         'Formato de imagen no soportado. Usa JPG, PNG, WEBP, GIF o HEIC.',
         statusCode: '415',
       );
@@ -150,7 +150,7 @@ class ProfileProvider {
       }
     }
 
-    throw const StorageException(
+    throw StorageException(
       'Formato de imagen no soportado. Usa JPG, PNG, WEBP, GIF o HEIC.',
       statusCode: '415',
     );
@@ -251,7 +251,7 @@ class ProfileProvider {
       return (firstName: null, lastName: null, avatarUrl: null);
     }
 
-    final metadata = authUser.userMetadata ?? const <String, dynamic>{};
+    final metadata = authUser.userMetadata ?? <String, dynamic>{};
     final fullName =
         _cleanString(metadata['full_name']) ?? _cleanString(metadata['name']);
     final givenName = _cleanString(metadata['given_name']);

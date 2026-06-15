@@ -23,7 +23,7 @@ class PetCubit extends Cubit<PetState> {
        _updatePet = updatePet,
        _deletePet = deletePet,
        _repository = repository,
-       super(const PetInitial());
+       super(PetInitial());
 
   final GetMyPets _getMyPets;
   final CreatePet _createPet;
@@ -37,12 +37,12 @@ class PetCubit extends Cubit<PetState> {
       PetOperationInProgress(:final pets) => pets,
       PetOperationSuccess(:final pets) => pets,
       PetError(:final pets) => pets,
-      _ => const [],
+      _ => [],
     };
   }
 
   Future<void> loadPets(String ownerId) async {
-    emit(const PetLoading());
+    emit(PetLoading());
     try {
       final pets = await _getMyPets(ownerId);
       emit(PetLoaded(pets));
@@ -133,7 +133,7 @@ class PetCubit extends Cubit<PetState> {
     }
   }
 
-  void resetPets() => emit(const PetInitial());
+  void resetPets() => emit(PetInitial());
 
   String _mapError(Object e) {
     if (e is StorageException) {

@@ -4,7 +4,7 @@ import '../entities/report_entity.dart';
 import '../repositories/report_repository.dart';
 
 class CreateLostReport {
-  const CreateLostReport(this._repository);
+  CreateLostReport(this._repository);
 
   final ReportRepository _repository;
 

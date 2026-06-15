@@ -26,7 +26,9 @@ String reportTitle(ReportEntity report) {
 }
 
 String reportTypeLabel(ReportEntity report) {
-  return report.type == ReportType.lost ? 'Mascota perdida' : 'Mascota encontrada';
+  return report.type == ReportType.lost
+      ? 'Mascota perdida'
+      : 'Mascota encontrada';
 }
 
 String reportStatusLabel(ReportStatus status) => switch (status) {
@@ -66,7 +68,10 @@ String reportApproximateCoordinatesLabel(ReportEntity report) {
 Future<void> shareReport(BuildContext context, ReportEntity report) async {
   try {
     final title = reportTitle(report);
-    final dateLabel = DateFormat('d MMM y, HH:mm', 'es').format(report.occurredAt);
+    final dateLabel = DateFormat(
+      'd MMM y, HH:mm',
+      'es',
+    ).format(report.occurredAt);
     final shareText = StringBuffer()
       ..writeln('Reporte de ${AppConstants.appName}')
       ..writeln()
@@ -74,17 +79,16 @@ Future<void> shareReport(BuildContext context, ReportEntity report) async {
       ..writeln('Tipo: ${reportTypeLabel(report)}')
       ..writeln('Estado: ${reportStatusLabel(report.status)}')
       ..writeln('Ubicación aproximada: ${reportLocationLabel(report)}')
-      ..writeln('Coordenadas aproximadas: ${reportApproximateCoordinatesLabel(report)}')
+      ..writeln(
+        'Coordenadas aproximadas: ${reportApproximateCoordinatesLabel(report)}',
+      )
       ..writeln('Fecha: $dateLabel')
       ..writeln()
       ..writeln(reportDescriptionText(report))
       ..writeln()
       ..writeln('ID del reporte: ${report.id}');
 
-    await Share.share(
-      shareText.toString(),
-      subject: title,
-    );
+    await Share.share(shareText.toString(), subject: title);
   } catch (_) {
     if (!context.mounted) return;
     _showReportMessage(
@@ -94,33 +98,23 @@ Future<void> shareReport(BuildContext context, ReportEntity report) async {
   }
 }
 
-Future<void> openReportNavigation(BuildContext context, ReportEntity report) async {
-  final uri = Uri.https(
-    'www.google.com',
-    '/maps/search/',
-    {
-      'api': '1',
-      'query': '${report.approximateLatitude},${report.approximateLongitude}',
-    },
-  );
+Future<void> openReportNavigation(
+  BuildContext context,
+  ReportEntity report,
+) async {
+  final uri = Uri.https('www.google.com', '/maps/search/', {
+    'api': '1',
+    'query': '${report.approximateLatitude},${report.approximateLongitude}',
+  });
 
   try {
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && context.mounted) {
-      _showReportMessage(
-        context,
-        'No pudimos abrir la app de mapas.',
-      );
+      _showReportMessage(context, 'No pudimos abrir la app de mapas.');
     }
   } catch (_) {
     if (!context.mounted) return;
-    _showReportMessage(
-      context,
-      'No pudimos abrir la app de mapas.',
-    );
+    _showReportMessage(context, 'No pudimos abrir la app de mapas.');
   }
 }
 
@@ -128,7 +122,7 @@ void _showReportMessage(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
-      backgroundColor: AppColors.error,
+      backgroundColor: context.appColors.error,
       behavior: SnackBarBehavior.floating,
     ),
   );

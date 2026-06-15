@@ -57,20 +57,20 @@ class _PetsPageState extends State<PetsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Eliminar mascota'),
+        title: Text('Eliminar mascota'),
         content: Text(
           '¿Eliminar a ${pet.name}? Esta acción no se puede deshacer.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
+            child: Text(
               'Eliminar',
-              style: TextStyle(color: AppColors.error),
+              style: TextStyle(color: context.appColors.error),
             ),
           ),
         ],
@@ -92,7 +92,7 @@ class _PetsPageState extends State<PetsPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: AppColors.success,
+                backgroundColor: context.appColors.success,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -103,7 +103,7 @@ class _PetsPageState extends State<PetsPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: AppColors.error,
+                backgroundColor: context.appColors.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -125,26 +125,26 @@ class _PetsPageState extends State<PetsPage> {
               state is PetLoading || state is PetOperationInProgress;
 
           return Scaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: context.appColors.background,
             body: SafeArea(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                    padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
                     child: Row(
                       children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Mis mascotas',
                                 style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
+                                  color: context.appColors.textPrimary,
                                   letterSpacing: -0.5,
                                 ),
                               ),
@@ -153,9 +153,9 @@ class _PetsPageState extends State<PetsPage> {
                                   pets.isEmpty
                                       ? 'Aún no tienes mascotas registradas'
                                       : '${pets.length} ${pets.length == 1 ? 'mascota registrada' : 'mascotas registradas'}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
-                                    color: AppColors.textSecondary,
+                                    color: context.appColors.textSecondary,
                                   ),
                                 ),
                             ],
@@ -174,11 +174,11 @@ class _PetsPageState extends State<PetsPage> {
                                 BoxShadow(
                                   color: AppColors.primary.withAlpha(60),
                                   blurRadius: 12,
-                                  offset: const Offset(0, 4),
+                                  offset: Offset(0, 4),
                                 ),
                               ],
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.add_rounded,
                               color: Colors.white,
                               size: 22,
@@ -189,7 +189,7 @@ class _PetsPageState extends State<PetsPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
 
                   // Contenido
                   Expanded(
@@ -215,35 +215,33 @@ class _PetsPageState extends State<PetsPage> {
   }) {
     // Estado inicial o cargando por primera vez
     if (state is PetInitial || (state is PetLoading && pets == null)) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
     // Error sin datos previos
     if (state is PetError && pets!.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.wifi_off_rounded,
                 size: 48,
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 state.message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: context.appColors.textSecondary,
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(height: 20),
-              TextButton(onPressed: _refresh, child: const Text('Reintentar')),
+              SizedBox(height: 20),
+              TextButton(onPressed: _refresh, child: Text('Reintentar')),
             ],
           ),
         ),
@@ -262,9 +260,9 @@ class _PetsPageState extends State<PetsPage> {
       child: Stack(
         children: [
           ListView.separated(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+            padding: EdgeInsets.fromLTRB(24, 0, 24, 100),
             itemCount: pets!.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => SizedBox(height: 12),
             itemBuilder: (context, index) {
               final pet = pets[index];
               return PetCard(
@@ -275,13 +273,13 @@ class _PetsPageState extends State<PetsPage> {
             },
           ),
           if (isLoading)
-            const Positioned(
+            Positioned(
               top: 0,
               left: 0,
               right: 0,
               child: LinearProgressIndicator(
                 color: AppColors.primary,
-                backgroundColor: AppColors.border,
+                backgroundColor: context.appColors.border,
               ),
             ),
         ],
@@ -302,7 +300,7 @@ class _EmptyPetsState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+        padding: EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -310,40 +308,35 @@ class _EmptyPetsState extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: AppColors.pastelYellow,
+                color: context.appColors.pastelYellow,
                 borderRadius: BorderRadius.circular(28),
               ),
-              child: const Center(
-                child: Text('🐾', style: TextStyle(fontSize: 48)),
-              ),
+              child: Center(child: Text('🐾', style: TextStyle(fontSize: 48))),
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: 24),
+            Text(
               'Aún no tienes mascotas',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8),
+            Text(
               'Registra a tus mascotas para poder reportarlas si se pierden o ayudar a otras personas.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             GestureDetector(
               onTap: onAdd,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 14,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(999),
@@ -351,11 +344,11 @@ class _EmptyPetsState extends StatelessWidget {
                     BoxShadow(
                       color: AppColors.primary.withAlpha(60),
                       blurRadius: 16,
-                      offset: const Offset(0, 6),
+                      offset: Offset(0, 6),
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.add_rounded, color: Colors.white, size: 18),

@@ -6,7 +6,7 @@ import '../../domain/repositories/report_repository.dart';
 import '../providers/report_provider.dart';
 
 class ReportRepositoryImpl implements ReportRepository {
-  const ReportRepositoryImpl(this._provider);
+  ReportRepositoryImpl(this._provider);
 
   final ReportProvider _provider;
 

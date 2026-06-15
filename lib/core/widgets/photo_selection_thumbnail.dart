@@ -31,17 +31,17 @@ class PhotoSelectionThumbnail extends StatelessWidget {
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.appColors.surface,
               borderRadius: borderRadius,
               border: Border.all(
-                color: AppColors.border,
+                color: context.appColors.border,
                 width: isCircular ? 2 : 1,
               ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(12),
                   blurRadius: 16,
-                  offset: const Offset(0, 6),
+                  offset: Offset(0, 6),
                 ),
               ],
             ),
@@ -56,11 +56,11 @@ class PhotoSelectionThumbnail extends StatelessWidget {
               right: 6,
               child: Material(
                 color: Colors.black.withAlpha(150),
-                shape: const CircleBorder(),
+                shape: CircleBorder(),
                 child: InkWell(
                   onTap: onRemove,
-                  customBorder: const CircleBorder(),
-                  child: const SizedBox(
+                  customBorder: CircleBorder(),
+                  child: SizedBox(
                     width: 26,
                     height: 26,
                     child: Icon(

@@ -14,13 +14,13 @@ class ProfileCubit extends Cubit<ProfileState> {
     required UpdateProfile updateProfile,
   }) : _getProfile = getProfile,
        _updateProfile = updateProfile,
-       super(const ProfileInitial());
+       super(ProfileInitial());
 
   final GetProfile _getProfile;
   final UpdateProfile _updateProfile;
 
   Future<void> loadProfile(String userId) async {
-    emit(const ProfileLoading());
+    emit(ProfileLoading());
     try {
       final profile = await _getProfile(userId);
       emit(ProfileLoaded(profile));
@@ -51,7 +51,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   /// Reinicia el estado del perfil al cerrar sesión.
-  void resetProfile() => emit(const ProfileInitial());
+  void resetProfile() => emit(ProfileInitial());
 
   String _mapError(Object e) {
     if (e is StorageException) {

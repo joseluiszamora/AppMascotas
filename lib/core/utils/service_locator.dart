@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../theme/theme_cubit.dart';
 import '../../features/auth/data/providers/auth_provider.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -60,6 +61,9 @@ Future<void> setupServiceLocator() async {
       scopes: const ['email', 'profile'],
     ),
   );
+
+  // Theme — UI preferences
+  sl.registerLazySingleton(() => ThemeCubit(supabase: sl<SupabaseClient>()));
 
   // Auth — Data
   sl.registerLazySingleton<AuthProvider>(

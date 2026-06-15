@@ -70,8 +70,8 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
     final date = await showDatePicker(
       context: context,
       initialDate: _occurredAt,
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now().subtract(Duration(days: 365)),
+      lastDate: DateTime.now().add(Duration(days: 1)),
     );
     if (date == null || !mounted) return;
 
@@ -151,7 +151,9 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppColors.error : AppColors.success,
+        backgroundColor: isError
+            ? context.appColors.error
+            : context.appColors.success,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -174,17 +176,17 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
       },
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.appColors.background,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: context.appColors.background,
             surfaceTintColor: Colors.transparent,
             elevation: 0,
-            title: const Text(
+            title: Text(
               'Reportar encontrada',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
@@ -192,27 +194,27 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
             child: Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+                padding: EdgeInsets.fromLTRB(24, 16, 24, 40),
                 children: [
                   _buildInfoCard(),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildLabel('Fotos *'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _buildPhotosSection(),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildLabel('Tipo de mascota *'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _buildTypeSelector(state.isSubmitting),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildLabel('Ubicación aproximada *'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   ReportLocationPickerCard(
                     latitude: _latitudeCtrl.text,
                     longitude: _longitudeCtrl.text,
                     disabled: state.isSubmitting,
                     onTap: _pickLocationOnMap,
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextFormField(
                     controller: _locationDescriptionCtrl,
                     maxLines: 2,
@@ -220,64 +222,64 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
                       'Referencia del lugar (parque, calle, tienda...)',
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildLabel('Fecha y hora *'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   InkWell(
                     onTap: state.isSubmitting ? null : _pickOccurredAt,
                     borderRadius: BorderRadius.circular(16),
                     child: Ink(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: context.appColors.surface,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: context.appColors.border),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.schedule_rounded,
                             color: AppColors.primary,
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               DateFormat(
                                 'd MMM y, HH:mm',
                                 'es',
                               ).format(_occurredAt),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
-                                color: AppColors.textPrimary,
+                                color: context.appColors.textPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
-                          const Icon(
+                          Icon(
                             Icons.chevron_right_rounded,
-                            color: AppColors.textHint,
+                            color: context.appColors.textHint,
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildLabel('Color visible'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   TextFormField(
                     controller: _colorCtrl,
                     decoration: _inputDecoration('Ej. blanco, negro, café...'),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildLabel('Tamaño'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _buildSizeSelector(state.isSubmitting),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildLabel('Características visibles'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   TextFormField(
                     controller: _visibleDescriptionCtrl,
                     maxLines: 3,
@@ -285,9 +287,9 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
                       'Collar, manchas, condición, comportamiento, etc.',
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   _buildLabel('Comentario opcional'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   TextFormField(
                     controller: _commentCtrl,
                     maxLines: 4,
@@ -295,50 +297,50 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
                       'Detalles adicionales sobre el hallazgo.',
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: context.appColors.surface,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: context.appColors.border),
                     ),
                     child: SwitchListTile(
                       value: _showContact,
                       onChanged: state.isSubmitting
                           ? null
                           : (value) => setState(() => _showContact = value),
-                      title: const Text(
+                      title: Text(
                         'Permitir contacto',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                          color: context.appColors.textPrimary,
                         ),
                       ),
-                      subtitle: const Text(
+                      subtitle: Text(
                         'Actívalo si quieres que puedan contactarte directamente.',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                       activeThumbColor: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  SizedBox(height: 28),
                   SizedBox(
                     height: 54,
                     child: FilledButton.icon(
                       onPressed: state.isSubmitting ? null : _submit,
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.foundPet,
+                        backgroundColor: context.appColors.foundPet,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
                       icon: state.isSubmitting
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
@@ -346,12 +348,12 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(Icons.favorite_rounded),
+                          : Icon(Icons.favorite_rounded),
                       label: Text(
                         state.isSubmitting
                             ? 'Publicando...'
                             : 'Publicar reporte',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
@@ -369,16 +371,16 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
 
   Widget _buildInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.pastelGreen,
+        color: context.appColors.pastelGreen,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.foundPet.withAlpha(40)),
+        border: Border.all(color: context.appColors.foundPet.withAlpha(40)),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, color: AppColors.foundPet),
+          Icon(Icons.info_outline_rounded, color: context.appColors.foundPet),
           SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -386,7 +388,7 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
               style: TextStyle(
                 fontSize: 13,
                 height: 1.35,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -404,7 +406,7 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
         children: [
           ..._photos.map(
             (file) => Padding(
-              padding: const EdgeInsets.only(right: 10),
+              padding: EdgeInsets.only(right: 10),
               child: PhotoSelectionThumbnail(
                 onRemove: () => setState(() => _photos.remove(file)),
                 child: Image.file(file, fit: BoxFit.cover),
@@ -413,7 +415,7 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
           ),
           PhotoPickerActionTile(
             onTap: _pickPhoto,
-            accentColor: AppColors.foundPet,
+            accentColor: context.appColors.foundPet,
             highlighted: _photos.isEmpty,
             hasPhotos: _photos.isNotEmpty,
           ),
@@ -440,24 +442,30 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
               margin: EdgeInsets.only(
                 right: type != ReportPetType.other ? 8 : 0,
               ),
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: selected ? AppColors.foundPet : AppColors.surface,
+                color: selected
+                    ? context.appColors.foundPet
+                    : context.appColors.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: selected ? AppColors.foundPet : AppColors.border,
+                  color: selected
+                      ? context.appColors.foundPet
+                      : context.appColors.border,
                 ),
               ),
               child: Column(
                 children: [
-                  Text(emoji, style: const TextStyle(fontSize: 22)),
-                  const SizedBox(height: 4),
+                  Text(emoji, style: TextStyle(fontSize: 22)),
+                  SizedBox(height: 4),
                   Text(
                     label,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : AppColors.textSecondary,
+                      color: selected
+                          ? Colors.white
+                          : context.appColors.textSecondary,
                     ),
                   ),
                 ],
@@ -486,12 +494,16 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
         return GestureDetector(
           onTap: disabled ? null : () => setState(() => _petSize = size),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: selected ? AppColors.foundPet : AppColors.surface,
+              color: selected
+                  ? context.appColors.foundPet
+                  : context.appColors.surface,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: selected ? AppColors.foundPet : AppColors.border,
+                color: selected
+                    ? context.appColors.foundPet
+                    : context.appColors.border,
               ),
             ),
             child: Text(
@@ -499,7 +511,9 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : AppColors.textSecondary,
+                color: selected
+                    ? Colors.white
+                    : context.appColors.textSecondary,
               ),
             ),
           ),
@@ -511,10 +525,10 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+        color: context.appColors.textPrimary,
       ),
     );
   }
@@ -522,29 +536,29 @@ class _FoundReportFormScreenState extends State<FoundReportFormScreen> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+      hintStyle: TextStyle(fontSize: 14, color: context.appColors.textHint),
       filled: true,
-      fillColor: AppColors.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      fillColor: context.appColors.surface,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide(color: context.appColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide(color: context.appColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.error),
+        borderSide: BorderSide(color: context.appColors.error),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+        borderSide: BorderSide(color: context.appColors.error, width: 1.5),
       ),
     );
   }

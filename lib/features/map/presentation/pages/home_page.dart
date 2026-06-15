@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/utils/service_locator.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/blocs/auth/auth_bloc.dart';
@@ -64,7 +65,7 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.primaryDark,
+        backgroundColor: context.appColors.primaryDark,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -107,7 +108,7 @@ class _HomePageState extends State<HomePage> {
           return Stack(
             children: [
               Scaffold(
-                backgroundColor: AppColors.background,
+                backgroundColor: context.appColors.background,
                 body: IndexedStack(
                   index: _currentIndex,
                   children: [
@@ -116,7 +117,7 @@ class _HomePageState extends State<HomePage> {
                       onOpenPetsSection: _openPetsSection,
                       onOpenReportsSection: _openReportsSection,
                     ),
-                    const PetsPage(),
+                    PetsPage(),
                     ReportsMapPage(refreshToken: _mapRefreshKey),
                     _ProfileTab(user: user, isAuthLoading: isLoading),
                   ],
@@ -127,7 +128,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               if (isLoading)
-                const ColoredBox(
+                ColoredBox(
                   color: Color(0x55000000),
                   child: Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
@@ -214,7 +215,7 @@ class _HomeTabState extends State<_HomeTab> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.primaryDark,
+        backgroundColor: context.appColors.primaryDark,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -228,23 +229,23 @@ class _HomeTabState extends State<_HomeTab> {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             _buildHeader(firstName),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             _HeroBanner(onCreateReportTap: _openLostReportForm),
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             _buildSectionTitle('¿Qué necesitas hacer?'),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _buildQuickActions(),
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             _buildSectionTitle('Reportes recientes'),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _RecentReportsSection(key: ValueKey(_reportsRefreshKey)),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
           ],
         ),
       ),
@@ -260,17 +261,20 @@ class _HomeTabState extends State<_HomeTab> {
             children: [
               Text(
                 '¡Hola${firstName != null ? ', $firstName' : ''}! 👋',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 4),
+              Text(
                 'Ayuda a encontrar mascotas perdidas',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: context.appColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -286,10 +290,10 @@ class _HomeTabState extends State<_HomeTab> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+        color: context.appColors.textPrimary,
         letterSpacing: -0.3,
       ),
     );
@@ -299,7 +303,7 @@ class _HomeTabState extends State<_HomeTab> {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       childAspectRatio: 1.1,
@@ -308,7 +312,7 @@ class _HomeTabState extends State<_HomeTab> {
           icon: Icons.pets_rounded,
           label: 'Mis Mascotas',
           sublabel: 'Ver y gestionar',
-          bgColor: AppColors.pastelYellow,
+          bgColor: context.appColors.pastelYellow,
           iconColor: AppColors.primary,
           onTap: widget.onOpenPetsSection,
         ),
@@ -316,7 +320,7 @@ class _HomeTabState extends State<_HomeTab> {
           icon: Icons.feed_rounded,
           label: 'Reportes',
           sublabel: 'Explora la comunidad',
-          bgColor: AppColors.pastelBlue,
+          bgColor: context.appColors.pastelBlue,
           iconColor: Color(0xFF4488EE),
           onTap: widget.onOpenReportsSection,
         ),
@@ -324,16 +328,16 @@ class _HomeTabState extends State<_HomeTab> {
           icon: Icons.search_off_rounded,
           label: 'Reportar perdida',
           sublabel: 'Avisa a la comunidad',
-          bgColor: AppColors.pastelPink,
-          iconColor: AppColors.lostPet,
+          bgColor: context.appColors.pastelPink,
+          iconColor: context.appColors.lostPet,
           onTap: _openLostReportForm,
         ),
         _QuickActionCard(
           icon: Icons.favorite_rounded,
           label: 'Reportar encontrada',
           sublabel: 'Ayuda al dueño',
-          bgColor: AppColors.pastelGreen,
-          iconColor: AppColors.foundPet,
+          bgColor: context.appColors.pastelGreen,
+          iconColor: context.appColors.foundPet,
           onTap: _openFoundReportForm,
         ),
       ],
@@ -354,8 +358,8 @@ class _HeroBanner extends StatelessWidget {
     return Container(
       height: 180,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryDark],
+        gradient: LinearGradient(
+          colors: [AppColors.primary, context.appColors.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -364,7 +368,7 @@ class _HeroBanner extends StatelessWidget {
           BoxShadow(
             color: AppColors.primary.withAlpha(80),
             blurRadius: 24,
-            offset: const Offset(0, 8),
+            offset: Offset(0, 8),
           ),
         ],
       ),
@@ -397,7 +401,7 @@ class _HeroBanner extends StatelessWidget {
           ),
           // Contenido
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             child: Row(
               children: [
                 Expanded(
@@ -405,7 +409,7 @@ class _HeroBanner extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         '¿Perdiste\na tu mascota?',
                         style: TextStyle(
                           fontSize: 22,
@@ -415,14 +419,14 @@ class _HeroBanner extends StatelessWidget {
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: onCreateReportTap,
                           borderRadius: BorderRadius.circular(999),
                           child: Ink(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 8,
                             ),
@@ -430,12 +434,12 @@ class _HeroBanner extends StatelessWidget {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(999),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Crear reporte',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.primaryDark,
+                                color: context.appColors.primaryDark,
                               ),
                             ),
                           ),
@@ -444,7 +448,7 @@ class _HeroBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.pets_rounded, size: 80, color: Colors.white),
+                Icon(Icons.pets_rounded, size: 80, color: Colors.white),
               ],
             ),
           ),
@@ -479,15 +483,15 @@ class _QuickActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(15),
               blurRadius: 16,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
@@ -509,18 +513,18 @@ class _QuickActionCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   sublabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -565,17 +569,17 @@ class _NotificationsButtonState extends State<_NotificationsButton> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.appColors.surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: context.appColors.border),
               ),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  const Center(
+                  Center(
                     child: Icon(
                       Icons.notifications_outlined,
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                       size: 22,
                     ),
                   ),
@@ -584,20 +588,20 @@ class _NotificationsButtonState extends State<_NotificationsButton> {
                       top: -2,
                       right: -2,
                       child: Container(
-                        constraints: const BoxConstraints(minWidth: 18),
-                        padding: const EdgeInsets.symmetric(
+                        constraints: BoxConstraints(minWidth: 18),
+                        padding: EdgeInsets.symmetric(
                           horizontal: 5,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.error,
+                          color: context.appColors.error,
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(color: Colors.white, width: 2),
                         ),
                         child: Text(
                           unreadCount > 9 ? '9+' : '$unreadCount',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
@@ -646,7 +650,7 @@ class _RecentReportsSectionState extends State<_RecentReportsSection> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
+          return Center(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: CircularProgressIndicator(color: AppColors.primary),
@@ -657,46 +661,46 @@ class _RecentReportsSectionState extends State<_RecentReportsSection> {
         if (snapshot.hasError) {
           return Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+            padding: EdgeInsets.symmetric(vertical: 28, horizontal: 24),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.appColors.surface,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.appColors.border),
             ),
             child: Column(
               children: [
-                const Icon(
+                Icon(
                   Icons.wifi_tethering_error_rounded,
                   size: 40,
-                  color: AppColors.textHint,
+                  color: context.appColors.textHint,
                 ),
-                const SizedBox(height: 12),
-                const Text(
+                SizedBox(height: 12),
+                Text(
                   'No pudimos cargar los reportes recientes',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 10),
-                TextButton(onPressed: _retry, child: const Text('Reintentar')),
+                SizedBox(height: 10),
+                TextButton(onPressed: _retry, child: Text('Reintentar')),
               ],
             ),
           );
         }
 
-        final reports = snapshot.data ?? const <ReportEntity>[];
+        final reports = snapshot.data ?? <ReportEntity>[];
         if (reports.isEmpty) {
-          return const _EmptyReportsCard();
+          return _EmptyReportsCard();
         }
 
         return Column(
           children: reports
               .map(
                 (report) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(bottom: 12),
                   child: ReportListCard(report: report),
                 ),
               )
@@ -714,28 +718,32 @@ class _EmptyReportsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      padding: EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.search_rounded, size: 40, color: AppColors.textHint),
+          Icon(
+            Icons.search_rounded,
+            size: 40,
+            color: context.appColors.textHint,
+          ),
           SizedBox(height: 12),
           Text(
             'Sin reportes recientes',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           SizedBox(height: 4),
           Text(
             'Cuando la comunidad publique reportes activos aparecerán aquí.',
-            style: TextStyle(fontSize: 13, color: AppColors.textHint),
+            style: TextStyle(fontSize: 13, color: context.appColors.textHint),
             textAlign: TextAlign.center,
           ),
         ],
@@ -774,23 +782,25 @@ class _ProfileTabState extends State<_ProfileTab> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
+        title: Text('Cerrar sesión'),
+        content: Text('¿Estás seguro de que quieres cerrar sesión?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Cerrar sesión'),
+            style: TextButton.styleFrom(
+              foregroundColor: context.appColors.error,
+            ),
+            child: Text('Cerrar sesión'),
           ),
         ],
       ),
     );
     if (confirmed == true && context.mounted) {
-      context.read<AuthBloc>().add(const AuthSignOutRequested());
+      context.read<AuthBloc>().add(AuthSignOutRequested());
     }
   }
 
@@ -821,21 +831,21 @@ class _ProfileTabState extends State<_ProfileTab> {
         };
 
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Perfil',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -843,20 +853,20 @@ class _ProfileTabState extends State<_ProfileTab> {
                       GestureDetector(
                         onTap: () => _openEditProfile(context, profile),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                             horizontal: 14,
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
+                            color: context.appColors.primaryLight,
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(
                                 Icons.edit_rounded,
                                 size: 14,
-                                color: AppColors.primaryDark,
+                                color: context.appColors.primaryDark,
                               ),
                               SizedBox(width: 4),
                               Text(
@@ -864,7 +874,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.primaryDark,
+                                  color: context.appColors.primaryDark,
                                 ),
                               ),
                             ],
@@ -873,7 +883,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
 
                 // Avatar + nombre
                 Row(
@@ -882,7 +892,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
+                        color: context.appColors.primaryLight,
                         shape: BoxShape.circle,
                       ),
                       clipBehavior: Clip.antiAlias,
@@ -891,19 +901,19 @@ class _ProfileTabState extends State<_ProfileTab> {
                               profile!.avatarUrl!,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
+                                  Icon(
                                     Icons.person_rounded,
                                     size: 32,
                                     color: AppColors.primary,
                                   ),
                             )
-                          : const Icon(
+                          : Icon(
                               Icons.person_rounded,
                               size: 32,
                               color: AppColors.primary,
                             ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -913,7 +923,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                               height: 16,
                               width: 120,
                               decoration: BoxDecoration(
-                                color: AppColors.border,
+                                color: context.appColors.border,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             )
@@ -922,18 +932,18 @@ class _ProfileTabState extends State<_ProfileTab> {
                               profile?.fullName.isNotEmpty == true
                                   ? profile!.fullName
                                   : (widget.user?.name ?? 'Mi perfil'),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                                color: context.appColors.textPrimary,
                               ),
                             ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             widget.user?.email ?? '',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: AppColors.textSecondary,
+                              color: context.appColors.textSecondary,
                             ),
                           ),
                         ],
@@ -941,59 +951,62 @@ class _ProfileTabState extends State<_ProfileTab> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
 
                 // Preferencias
                 if (profile != null)
                   _buildPreferenceChip(profile.petPreferences),
                 if (profileState is ProfileError)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: EdgeInsets.only(top: 8),
                     child: Text(
                       profileState.message,
-                      style: const TextStyle(
-                        color: AppColors.error,
+                      style: TextStyle(
+                        color: context.appColors.error,
                         fontSize: 13,
                       ),
                     ),
                   ),
 
-                const Spacer(),
+                SizedBox(height: 24),
+                _buildThemeSection(),
+
+                SizedBox(height: 32),
 
                 // Botón cerrar sesión
                 GestureDetector(
                   onTap: isAuthLoading ? null : () => _confirmSignOut(context),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: AppColors.pastelPink,
+                      color: context.appColors.pastelPink,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.logout_rounded,
-                          color: AppColors.error,
+                          color: context.appColors.error,
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           'Cerrar sesión',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: isAuthLoading
-                                ? AppColors.textHint
-                                : AppColors.error,
+                                ? context.appColors.textHint
+                                : context.appColors.error,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
               ],
             ),
           ),
@@ -1010,26 +1023,112 @@ class _ProfileTabState extends State<_ProfileTab> {
       _ => ('Perros y gatos', '🐾'),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primaryLight,
+        color: context.appColors.primaryLight,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 14)),
-          const SizedBox(width: 6),
+          Text(icon, style: TextStyle(fontSize: 14)),
+          SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.primaryDark,
+              color: context.appColors.primaryDark,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildThemeSection() {
+    return BlocBuilder<ThemeCubit, AppThemePreference>(
+      builder: (context, preference) {
+        final colorScheme = Theme.of(context).colorScheme;
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colorScheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: context.appColors.primaryLight,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.contrast_rounded,
+                      color: context.appColors.primaryDark,
+                      size: 20,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Apariencia',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Por defecto usa tu dispositivo',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 14),
+              SegmentedButton<AppThemePreference>(
+                segments: AppThemePreference.values
+                    .map(
+                      (option) => ButtonSegment<AppThemePreference>(
+                        value: option,
+                        icon: Icon(option.icon),
+                        label: Text(option.label),
+                      ),
+                    )
+                    .toList(),
+                selected: {preference},
+                onSelectionChanged: (selection) {
+                  context.read<ThemeCubit>().setPreference(selection.first);
+                },
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  side: WidgetStateProperty.all(
+                    BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -1053,17 +1152,17 @@ class _BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+      padding: EdgeInsets.fromLTRB(24, 0, 24, 20),
       child: Container(
         height: 72,
         decoration: BoxDecoration(
-          color: const Color(0xFF111111),
+          color: Color(0xFF111111),
           borderRadius: BorderRadius.circular(999),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(50),
               blurRadius: 24,
-              offset: const Offset(0, 8),
+              offset: Offset(0, 8),
             ),
           ],
         ),
@@ -1076,11 +1175,8 @@ class _BottomNav extends StatelessWidget {
               onTap: () => onTap(i),
               behavior: HitTestBehavior.opaque,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
+                duration: Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: isActive ? AppColors.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(999),
@@ -1089,10 +1185,10 @@ class _BottomNav extends StatelessWidget {
                   children: [
                     Icon(item.icon, color: Colors.white, size: 22),
                     if (isActive) ...[
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         item.label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,

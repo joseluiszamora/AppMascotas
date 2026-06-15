@@ -2,7 +2,7 @@ import '../entities/report_entity.dart';
 import '../repositories/report_repository.dart';
 
 class GetMyReports {
-  const GetMyReports(this._repository);
+  GetMyReports(this._repository);
 
   final ReportRepository _repository;
 

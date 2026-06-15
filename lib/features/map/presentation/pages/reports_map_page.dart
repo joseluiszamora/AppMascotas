@@ -126,9 +126,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
       );
       if (!mounted) return;
 
@@ -170,7 +168,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.error,
+        backgroundColor: context.appColors.error,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -295,9 +293,9 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
   double _zoneRadiusMeters(int count) => 220 + (count * 120);
 
   Color _zoneColor(int count) {
-    if (count >= 5) return AppColors.error;
+    if (count >= 5) return context.appColors.error;
     if (count >= 3) return AppColors.primary;
-    return AppColors.foundPet;
+    return context.appColors.foundPet;
   }
 
   int _activeFilterCount() {
@@ -336,43 +334,43 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         body: SafeArea(
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+                padding: EdgeInsets.fromLTRB(20, 18, 20, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Reportes',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                         letterSpacing: -0.4,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       _section == _ReportsSection.all
                           ? 'Listado principal con reportes de la comunidad'
                           : _section == _ReportsSection.map
                           ? 'OSM · reportes activos cercanos'
                           : 'Tus reportes con filtros por tipo, mascota y estado',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20),
                 child: SegmentedButton<_ReportsSection>(
-                  segments: const [
+                  segments: [
                     ButtonSegment<_ReportsSection>(
                       value: _ReportsSection.all,
                       icon: Icon(Icons.view_list_rounded),
@@ -402,15 +400,15 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                     backgroundColor: WidgetStateProperty.resolveWith(
                       (states) => states.contains(WidgetState.selected)
                           ? AppColors.primary.withAlpha(26)
-                          : AppColors.surface,
+                          : context.appColors.surface,
                     ),
                     side: WidgetStateProperty.all(
-                      const BorderSide(color: AppColors.border),
+                      BorderSide(color: context.appColors.border),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Expanded(
                 child: IndexedStack(
                   index: _section.index,
@@ -441,10 +439,10 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
+          padding: EdgeInsets.fromLTRB(20, 6, 20, 10),
           child: Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -453,7 +451,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -461,30 +459,27 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                       'Busca actividad reciente por zona, tipo y estado.',
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
               if (_activeFilterCount() > 0)
-                TextButton(
-                  onPressed: _resetFilters,
-                  child: const Text('Limpiar'),
-                ),
+                TextButton(onPressed: _resetFilters, child: Text('Limpiar')),
               IconButton.filledTonal(
                 onPressed: _openFilters,
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.surface,
-                  foregroundColor: AppColors.textPrimary,
+                  backgroundColor: context.appColors.surface,
+                  foregroundColor: context.appColors.textPrimary,
                 ),
-                icon: const Icon(Icons.tune_rounded),
+                icon: Icon(Icons.tune_rounded),
               ),
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -511,45 +506,45 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.appColors.surface,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.appColors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Privacidad del mapa',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   'Los puntos y rutas usan ubicación aproximada para proteger la privacidad del reporte.',
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: SegmentedButton<_MapViewMode>(
-            segments: const [
+            segments: [
               ButtonSegment<_MapViewMode>(
                 value: _MapViewMode.markers,
                 icon: Icon(Icons.place_rounded),
@@ -569,21 +564,21 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
               backgroundColor: WidgetStateProperty.resolveWith(
                 (states) => states.contains(WidgetState.selected)
                     ? AppColors.primary.withAlpha(26)
-                    : AppColors.surface,
+                    : context.appColors.surface,
               ),
               side: WidgetStateProperty.all(
-                const BorderSide(color: AppColors.border),
+                BorderSide(color: context.appColors.border),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Expanded(
           child: FutureBuilder<List<ReportEntity>>(
             future: _future,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
+                return Center(
                   child: CircularProgressIndicator(color: AppColors.primary),
                 );
               }
@@ -599,7 +594,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                 );
               }
 
-              final reports = snapshot.data ?? const <ReportEntity>[];
+              final reports = snapshot.data ?? <ReportEntity>[];
               if (reports.isEmpty) {
                 return _MapFeedbackState(
                   icon: Icons.location_searching_rounded,
@@ -656,7 +651,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
               return Stack(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(28),
                       child: FlutterMap(
@@ -711,10 +706,10 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: EdgeInsets.symmetric(vertical: 12),
                         ),
-                        icon: const Icon(Icons.search_rounded),
-                        label: const Text('Buscar en esta zona'),
+                        icon: Icon(Icons.search_rounded),
+                        label: Text('Buscar en esta zona'),
                       ),
                     ),
                   Positioned(
@@ -734,12 +729,12 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                       children: [
                         FloatingActionButton.small(
                           heroTag: 'map-refresh',
-                          backgroundColor: AppColors.surface,
-                          foregroundColor: AppColors.textPrimary,
+                          backgroundColor: context.appColors.surface,
+                          foregroundColor: context.appColors.textPrimary,
                           onPressed: _reloadReports,
-                          child: const Icon(Icons.refresh_rounded),
+                          child: Icon(Icons.refresh_rounded),
                         ),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         FloatingActionButton.small(
                           heroTag: 'map-center',
                           backgroundColor: AppColors.primary,
@@ -748,7 +743,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                               ? null
                               : _centerOnCurrentLocation,
                           child: _isLocating
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
@@ -756,7 +751,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.my_location_rounded),
+                              : Icon(Icons.my_location_rounded),
                         ),
                       ],
                     ),
@@ -779,8 +774,8 @@ class _ReportMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = report.type == ReportType.lost
-        ? AppColors.lostPet
-        : AppColors.foundPet;
+        ? context.appColors.lostPet
+        : context.appColors.foundPet;
     final icon = report.type == ReportType.lost
         ? Icons.search_off_rounded
         : Icons.favorite_rounded;
@@ -793,7 +788,7 @@ class _ReportMarker extends StatelessWidget {
           BoxShadow(
             color: color.withAlpha(90),
             blurRadius: 18,
-            offset: const Offset(0, 6),
+            offset: Offset(0, 6),
           ),
         ],
         border: Border.all(color: Colors.white, width: 3),
@@ -822,39 +817,39 @@ class _MapFeedbackState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.appColors.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 42, color: AppColors.textHint),
-              const SizedBox(height: 12),
+              Icon(icon, size: 42, color: context.appColors.textHint),
+              SizedBox(height: 12),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               TextButton(onPressed: onAction, child: Text(actionLabel)),
             ],
           ),
@@ -872,18 +867,18 @@ class _FilterSummaryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
+          color: context.appColors.textSecondary,
         ),
       ),
     );
@@ -891,7 +886,7 @@ class _FilterSummaryChip extends StatelessWidget {
 }
 
 class _MapFiltersResult {
-  const _MapFiltersResult({
+  _MapFiltersResult({
     required this.includeLost,
     required this.includeFound,
     required this.zone,
@@ -991,11 +986,11 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
+          decoration: BoxDecoration(
+            color: context.appColors.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          padding: EdgeInsets.fromLTRB(20, 18, 20, 24),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1005,35 +1000,35 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: context.appColors.border,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
-                const Text(
+                SizedBox(height: 18),
+                Text(
                   'Filtros del mapa',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: FilterChip(
-                        label: const Text('Perdidas'),
+                        label: Text('Perdidas'),
                         selected: _includeLost,
                         onSelected: (value) =>
                             setState(() => _includeLost = value),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: FilterChip(
-                        label: const Text('Encontradas'),
+                        label: Text('Encontradas'),
                         selected: _includeFound,
                         onSelected: (value) =>
                             setState(() => _includeFound = value),
@@ -1041,31 +1036,31 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _LabeledField(
                   label: 'Zona',
                   child: TextField(
                     controller: _zoneCtrl,
-                    decoration: _sheetInput('Ej. norte, centro...'),
+                    decoration: _sheetInput(context, 'Ej. norte, centro...'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _LabeledField(
                   label: 'Barrio',
                   child: TextField(
                     controller: _neighborhoodCtrl,
-                    decoration: _sheetInput('Ej. Chapinero'),
+                    decoration: _sheetInput(context, 'Ej. Chapinero'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _LabeledField(
                   label: 'Ciudad',
                   child: TextField(
                     controller: _cityCtrl,
-                    decoration: _sheetInput('Ej. Bogotá'),
+                    decoration: _sheetInput(context, 'Ej. Bogotá'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _LabeledField(
                   label: 'Radio (${_radiusKm.toStringAsFixed(0)} km)',
                   child: Slider(
@@ -1077,12 +1072,12 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                     onChanged: (value) => setState(() => _radiusKm = value),
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _LabeledField(
                   label: 'Tipo de mascota',
                   child: DropdownButtonFormField<ReportPetType?>(
                     initialValue: _petType,
-                    items: const [
+                    items: [
                       DropdownMenuItem(value: null, child: Text('Todos')),
                       DropdownMenuItem(
                         value: ReportPetType.dog,
@@ -1098,31 +1093,31 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                       ),
                     ],
                     onChanged: (value) => setState(() => _petType = value),
-                    decoration: _sheetInput('Selecciona'),
+                    decoration: _sheetInput(context, 'Selecciona'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _LabeledField(
                   label: 'Raza',
                   child: TextField(
                     controller: _breedCtrl,
-                    decoration: _sheetInput('Ej. Labrador'),
+                    decoration: _sheetInput(context, 'Ej. Labrador'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _LabeledField(
                   label: 'Color',
                   child: TextField(
                     controller: _colorCtrl,
-                    decoration: _sheetInput('Ej. negro'),
+                    decoration: _sheetInput(context, 'Ej. negro'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _LabeledField(
                   label: 'Tamaño',
                   child: DropdownButtonFormField<ReportPetSize?>(
                     initialValue: _size,
-                    items: const [
+                    items: [
                       DropdownMenuItem(value: null, child: Text('Todos')),
                       DropdownMenuItem(
                         value: ReportPetSize.small,
@@ -1142,15 +1137,15 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                       ),
                     ],
                     onChanged: (value) => setState(() => _size = value),
-                    decoration: _sheetInput('Selecciona'),
+                    decoration: _sheetInput(context, 'Selecciona'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _LabeledField(
                   label: 'Estado',
                   child: DropdownButtonFormField<ReportStatus?>(
                     initialValue: _status,
-                    items: const [
+                    items: [
                       DropdownMenuItem(value: null, child: Text('Todos')),
                       DropdownMenuItem(
                         value: ReportStatus.active,
@@ -1162,10 +1157,10 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                       ),
                     ],
                     onChanged: (value) => setState(() => _status = value),
-                    decoration: _sheetInput('Selecciona'),
+                    decoration: _sheetInput(context, 'Selecciona'),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Row(
                   children: [
                     Expanded(
@@ -1185,10 +1180,10 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                             _colorCtrl.clear();
                           });
                         },
-                        child: const Text('Limpiar'),
+                        child: Text('Limpiar'),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: FilledButton(
                         onPressed: () {
@@ -1211,7 +1206,7 @@ class _MapFiltersSheetState extends State<_MapFiltersSheet> {
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                         ),
-                        child: const Text('Aplicar'),
+                        child: Text('Aplicar'),
                       ),
                     ),
                   ],
@@ -1238,36 +1233,36 @@ class _LabeledField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         child,
       ],
     );
   }
 }
 
-InputDecoration _sheetInput(String hint) {
+InputDecoration _sheetInput(BuildContext context, String hint) {
   return InputDecoration(
     hintText: hint,
     filled: true,
-    fillColor: AppColors.surface,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    fillColor: context.appColors.surface,
+    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.border),
+      borderSide: BorderSide(color: context.appColors.border),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.border),
+      borderSide: BorderSide(color: context.appColors.border),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      borderSide: BorderSide(color: AppColors.primary, width: 1.5),
     ),
   );
 }
@@ -1299,19 +1294,19 @@ class _ReportDetailSheet extends StatelessWidget {
     ).format(report.occurredAt);
     final title = reportTitle(report);
     final badgeColor = report.type == ReportType.lost
-        ? AppColors.lostPet
-        : AppColors.foundPet;
+        ? context.appColors.lostPet
+        : context.appColors.foundPet;
     final badgeBg = report.type == ReportType.lost
-        ? AppColors.pastelPink
-        : AppColors.pastelGreen;
+        ? context.appColors.pastelPink
+        : context.appColors.pastelGreen;
 
     return SafeArea(
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.background,
+        decoration: BoxDecoration(
+          color: context.appColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+        padding: EdgeInsets.fromLTRB(20, 18, 20, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1321,12 +1316,12 @@ class _ReportDetailSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: context.appColors.border,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1357,13 +1352,13 @@ class _ReportDetailSheet extends StatelessWidget {
                       size: 34,
                     ),
                   ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 5,
                         ),
@@ -1382,21 +1377,21 @@ class _ReportDetailSheet extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: context.appColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         reportLocationLabel(report),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                     ],
@@ -1404,10 +1399,10 @@ class _ReportDetailSheet extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _DetailRow(icon: Icons.schedule_rounded, text: dateLabel),
             Padding(
-              padding: const EdgeInsets.only(top: 10),
+              padding: EdgeInsets.only(top: 10),
               child: _DetailRow(
                 icon: Icons.pin_drop_outlined,
                 text:
@@ -1416,7 +1411,7 @@ class _ReportDetailSheet extends StatelessWidget {
             ),
             if (report.petBreed != null && report.petBreed!.trim().isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 10),
+                padding: EdgeInsets.only(top: 10),
                 child: _DetailRow(
                   icon: Icons.pets_rounded,
                   text: report.petBreed!,
@@ -1427,17 +1422,17 @@ class _ReportDetailSheet extends StatelessWidget {
                     .isNotEmpty ==
                 true)
               Padding(
-                padding: const EdgeInsets.only(top: 12),
+                padding: EdgeInsets.only(top: 12),
                 child: Text(
                   reportDescriptionText(report),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     height: 1.4,
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
               ),
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
             Row(
               children: [
                 Expanded(
@@ -1447,27 +1442,27 @@ class _ReportDetailSheet extends StatelessWidget {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                     ),
-                    icon: const Icon(Icons.visibility_rounded),
-                    label: const Text('Ver reporte'),
+                    icon: Icon(Icons.visibility_rounded),
+                    label: Text('Ver reporte'),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: onNavigate,
-                    icon: const Icon(Icons.navigation_rounded),
-                    label: const Text('Navegar'),
+                    icon: Icon(Icons.navigation_rounded),
+                    label: Text('Navegar'),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: onShare,
-                icon: const Icon(Icons.share_rounded),
-                label: const Text('Compartir reporte'),
+                icon: Icon(Icons.share_rounded),
+                label: Text('Compartir reporte'),
               ),
             ),
           ],
@@ -1487,14 +1482,14 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppColors.textHint),
-        const SizedBox(width: 8),
+        Icon(icon, size: 16, color: context.appColors.textHint),
+        SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
         ),
@@ -1520,12 +1515,12 @@ class _MapStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 210,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.background.withAlpha(240),
+        color: context.appColors.background.withAlpha(240),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
+        border: Border.all(color: context.appColors.border),
+        boxShadow: [
           BoxShadow(
             color: Color(0x16000000),
             blurRadius: 22,
@@ -1541,25 +1536,25 @@ class _MapStatsCard extends StatelessWidget {
             viewMode == _MapViewMode.markers
                 ? 'Resultados visibles'
                 : 'Zonas de mayor incidencia',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: context.appColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             '$reportsCount reportes dentro de ${queryCenter.latitude.toStringAsFixed(2)}, ${queryCenter.longitude.toStringAsFixed(2)}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           if (viewMode == _MapViewMode.incidence && topZones.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             ...topZones.map(
               (zone) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: EdgeInsets.only(bottom: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1573,22 +1568,22 @@ class _MapStatsCard extends StatelessWidget {
                       ),
                       child: Text(
                         '${zone.count}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         zone.label,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textPrimary,
+                          color: context.appColors.textPrimary,
                         ),
                       ),
                     ),
@@ -1612,10 +1607,10 @@ class _IncidenceCountBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: context.appColors.background,
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.primary, width: 2),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: Color(0x24000000),
             blurRadius: 10,
@@ -1626,7 +1621,7 @@ class _IncidenceCountBadge extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         '$count',
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w800,
           color: AppColors.primary,
@@ -1651,7 +1646,7 @@ class _IncidenceAccumulator {
 }
 
 class _IncidenceZone {
-  const _IncidenceZone({
+  _IncidenceZone({
     required this.center,
     required this.count,
     required this.label,

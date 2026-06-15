@@ -3,7 +3,7 @@ import '../entities/report_map_query.dart';
 import '../repositories/report_repository.dart';
 
 class GetMapReports {
-  const GetMapReports(this._repository);
+  GetMapReports(this._repository);
 
   final ReportRepository _repository;
 

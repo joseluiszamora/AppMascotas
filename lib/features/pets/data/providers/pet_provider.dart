@@ -7,7 +7,7 @@ import '../../domain/entities/pet_entity.dart';
 import '../models/pet_model.dart';
 
 class PetProvider {
-  const PetProvider({required this.supabase});
+  PetProvider({required this.supabase});
 
   final SupabaseClient supabase;
 
@@ -26,7 +26,7 @@ class PetProvider {
     final normalizedExt = ext.toLowerCase();
     final mimeType = _supportedMimeTypes[normalizedExt];
     if (mimeType == null) {
-      throw const StorageException(
+      throw StorageException(
         'Formato de imagen no soportado. Usa JPG, PNG, WEBP, GIF o HEIC.',
         statusCode: '415',
       );
@@ -87,7 +87,7 @@ class PetProvider {
       }
     }
 
-    throw const StorageException(
+    throw StorageException(
       'Formato de imagen no soportado. Usa JPG, PNG, WEBP, GIF o HEIC.',
       statusCode: '415',
     );

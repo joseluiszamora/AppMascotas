@@ -22,13 +22,13 @@ class PetCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(12),
               blurRadius: 16,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
@@ -36,7 +36,7 @@ class PetCard extends StatelessWidget {
           children: [
             // Foto
             ClipRRect(
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(24),
                 bottomLeft: Radius.circular(24),
               ),
@@ -58,10 +58,7 @@ class PetCard extends StatelessWidget {
             // Contenido
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -70,10 +67,10 @@ class PetCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             pet.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: context.appColors.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -81,18 +78,18 @@ class PetCard extends StatelessWidget {
                         _StatusChip(pet.status),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Row(
                       children: [
                         _TypeBadge(pet.type),
                         if (pet.breed != null && pet.breed!.isNotEmpty) ...[
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               pet.breed!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.textSecondary,
+                                color: context.appColors.textSecondary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -101,12 +98,12 @@ class PetCard extends StatelessWidget {
                       ],
                     ),
                     if (pet.ageYears != null || pet.ageMonths != null) ...[
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         _ageLabel(pet),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                         ),
                       ),
                     ],
@@ -117,10 +114,10 @@ class PetCard extends StatelessWidget {
 
             // Ícono de flecha
             Padding(
-              padding: const EdgeInsets.only(right: 16),
+              padding: EdgeInsets.only(right: 16),
               child: Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
                 size: 20,
               ),
             ),
@@ -149,16 +146,19 @@ class _PhotoPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon) = switch (type) {
-      PetType.dog => (AppColors.pastelYellow, Icons.pets_rounded),
-      PetType.cat => (AppColors.pastelPink, '🐱'),
-      PetType.other => (AppColors.pastelBlue, Icons.cruelty_free_rounded),
+      PetType.dog => (context.appColors.pastelYellow, Icons.pets_rounded),
+      PetType.cat => (context.appColors.pastelPink, '🐱'),
+      PetType.other => (
+        context.appColors.pastelBlue,
+        Icons.cruelty_free_rounded,
+      ),
     };
     return Container(
       color: color,
       child: Center(
         child: icon is IconData
             ? Icon(icon, size: 36, color: AppColors.primary)
-            : Text(icon as String, style: const TextStyle(fontSize: 32)),
+            : Text(icon as String, style: TextStyle(fontSize: 32)),
       ),
     );
   }
@@ -171,22 +171,22 @@ class _TypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (type) {
-      PetType.dog => ('Perro', AppColors.pastelYellow),
-      PetType.cat => ('Gato', AppColors.pastelPink),
-      PetType.other => ('Otro', AppColors.pastelBlue),
+      PetType.dog => ('Perro', context.appColors.pastelYellow),
+      PetType.cat => ('Gato', context.appColors.pastelPink),
+      PetType.other => ('Otro', context.appColors.pastelBlue),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: context.appColors.textPrimary,
         ),
       ),
     );
@@ -199,16 +199,16 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (status == PetStatus.normal) return const SizedBox.shrink();
+    if (status == PetStatus.normal) return SizedBox.shrink();
 
     final (label, color) = switch (status) {
-      PetStatus.lost => ('Perdida', AppColors.lostPet),
-      PetStatus.found => ('Encontrada', AppColors.foundPet),
+      PetStatus.lost => ('Perdida', context.appColors.lostPet),
+      PetStatus.found => ('Encontrada', context.appColors.foundPet),
       PetStatus.normal => ('', Colors.transparent),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withAlpha(30),
         borderRadius: BorderRadius.circular(999),

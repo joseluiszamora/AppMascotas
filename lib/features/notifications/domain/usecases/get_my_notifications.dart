@@ -2,7 +2,7 @@ import '../entities/app_notification_entity.dart';
 import '../repositories/notification_repository.dart';
 
 class GetMyNotifications {
-  const GetMyNotifications(this._repository);
+  GetMyNotifications(this._repository);
 
   final NotificationRepository _repository;
 

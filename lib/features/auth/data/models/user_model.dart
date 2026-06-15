@@ -20,7 +20,7 @@ class UserModel extends UserEntity {
     String? fallbackName,
     String? fallbackAvatarUrl,
   }) {
-    final metadata = user.userMetadata ?? const <String, dynamic>{};
+    final metadata = user.userMetadata ?? <String, dynamic>{};
     final fullName = _cleanString(metadata['full_name']);
     final resolvedName =
         fullName ??

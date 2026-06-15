@@ -64,7 +64,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: AppColors.error,
+              backgroundColor: context.appColors.error,
             ),
           );
         }
@@ -74,12 +74,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
           final isSaving = state is ProfileUpdating;
 
           return Scaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: context.appColors.background,
             body: SafeArea(
               child: Form(
                 key: _formKey,
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                  padding: EdgeInsets.fromLTRB(24, 32, 24, 32),
                   children: [
                     // Ícono de bienvenida
                     Center(
@@ -87,38 +87,38 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
+                          color: context.appColors.primaryLight,
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.pets_rounded,
                           size: 40,
                           color: AppColors.primary,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    const Text(
+                    SizedBox(height: 24),
+                    Text(
                       '¡Bienvenido!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: 8),
+                    Text(
                       'Cuéntanos un poco sobre ti para personalizar tu experiencia.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                         height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 36),
+                    SizedBox(height: 36),
 
                     // Nombre
                     _buildTextField(
@@ -130,27 +130,27 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           ? 'Ingresa tu nombre'
                           : null,
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     _buildTextField(
                       controller: _lastNameCtrl,
                       label: 'Apellidos',
                       hint: 'Tus apellidos (opcional)',
                       enabled: !isSaving,
                     ),
-                    const SizedBox(height: 28),
+                    SizedBox(height: 28),
 
                     // Preferencias
-                    const Text(
+                    Text(
                       '¿Qué tipo de mascotas te interesan?',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     _buildPetPreferenceSelector(isSaving),
-                    const SizedBox(height: 36),
+                    SizedBox(height: 36),
 
                     // Botón continuar
                     GestureDetector(
@@ -159,7 +159,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                         height: 54,
                         decoration: BoxDecoration(
                           color: isSaving
-                              ? AppColors.border
+                              ? context.appColors.border
                               : AppColors.primary,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: isSaving
@@ -168,12 +168,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                                   BoxShadow(
                                     color: AppColors.primary.withAlpha(60),
                                     blurRadius: 16,
-                                    offset: const Offset(0, 6),
+                                    offset: Offset(0, 6),
                                   ),
                                 ],
                         ),
                         child: isSaving
-                            ? const Center(
+                            ? Center(
                                 child: SizedBox(
                                   width: 22,
                                   height: 22,
@@ -183,7 +183,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                                   ),
                                 ),
                               )
-                            : const Center(
+                            : Center(
                                 child: Text(
                                   'Continuar',
                                   style: TextStyle(
@@ -216,47 +216,44 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       controller: controller,
       enabled: enabled,
       validator: validator,
-      style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+      style: TextStyle(fontSize: 15, color: context.appColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        labelStyle: const TextStyle(
-          color: AppColors.textSecondary,
+        labelStyle: TextStyle(
+          color: context.appColors.textSecondary,
           fontSize: 14,
         ),
-        hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
+        hintStyle: TextStyle(color: context.appColors.textHint, fontSize: 14),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: context.appColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderSide: BorderSide(color: context.appColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+          borderSide: BorderSide(color: context.appColors.error, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
 
   Widget _buildPetPreferenceSelector(bool disabled) {
-    const options = [
+    final options = [
       (value: PetPreference.dogs, label: 'Perros', icon: '🐶'),
       (value: PetPreference.cats, label: 'Gatos', icon: '🐱'),
       (value: PetPreference.both, label: 'Ambos', icon: '🐾'),
@@ -273,29 +270,33 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
               ? null
               : () => setState(() => _petPreference = opt.value),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            duration: Duration(milliseconds: 150),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primaryLight : AppColors.surface,
+              color: isSelected
+                  ? context.appColors.primaryLight
+                  : context.appColors.surface,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.border,
+                color: isSelected
+                    ? AppColors.primary
+                    : context.appColors.border,
                 width: isSelected ? 1.5 : 1,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(opt.icon, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 6),
+                Text(opt.icon, style: TextStyle(fontSize: 16)),
+                SizedBox(width: 6),
                 Text(
                   opt.label,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                     color: isSelected
-                        ? AppColors.primaryDark
-                        : AppColors.textSecondary,
+                        ? context.appColors.primaryDark
+                        : context.appColors.textSecondary,
                   ),
                 ),
               ],

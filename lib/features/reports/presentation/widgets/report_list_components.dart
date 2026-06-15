@@ -9,7 +9,7 @@ import '../utils/report_actions.dart';
 enum ReportListSortOrder { newest, oldest, proximity }
 
 class ReportListBadgeData {
-  const ReportListBadgeData({
+  ReportListBadgeData({
     required this.label,
     required this.color,
     required this.background,
@@ -21,7 +21,7 @@ class ReportListBadgeData {
 }
 
 class ReportListFiltersResult {
-  const ReportListFiltersResult({
+  ReportListFiltersResult({
     required this.includeLost,
     required this.includeFound,
     required this.petType,
@@ -89,11 +89,11 @@ class _ReportListFiltersSheetState extends State<ReportListFiltersSheet> {
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
+          decoration: BoxDecoration(
+            color: context.appColors.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          padding: EdgeInsets.fromLTRB(20, 18, 20, 24),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,35 +103,35 @@ class _ReportListFiltersSheetState extends State<ReportListFiltersSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: context.appColors.border,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 Text(
                   widget.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: FilterChip(
-                        label: const Text('Perdidas'),
+                        label: Text('Perdidas'),
                         selected: _includeLost,
                         onSelected: (value) =>
                             setState(() => _includeLost = value),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: FilterChip(
-                        label: const Text('Encontradas'),
+                        label: Text('Encontradas'),
                         selected: _includeFound,
                         onSelected: (value) =>
                             setState(() => _includeFound = value),
@@ -139,23 +139,24 @@ class _ReportListFiltersSheetState extends State<ReportListFiltersSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 ReportListLabeledField(
                   label: 'Buscar',
                   child: TextField(
                     controller: _queryCtrl,
                     decoration: reportListSheetInput(
+                      context,
                       'Nombre, ubicación, color...',
                     ),
                   ),
                 ),
                 if (widget.showSortField) ...[
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   ReportListLabeledField(
                     label: 'Ordenar por',
                     child: DropdownButtonFormField<ReportListSortOrder>(
                       initialValue: _sortOrder,
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: ReportListSortOrder.newest,
                           child: Text('Fecha más reciente'),
@@ -173,16 +174,16 @@ class _ReportListFiltersSheetState extends State<ReportListFiltersSheet> {
                         if (value == null) return;
                         setState(() => _sortOrder = value);
                       },
-                      decoration: reportListSheetInput('Selecciona'),
+                      decoration: reportListSheetInput(context, 'Selecciona'),
                     ),
                   ),
                 ],
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 ReportListLabeledField(
                   label: 'Tipo de mascota',
                   child: DropdownButtonFormField<ReportPetType?>(
                     initialValue: _petType,
-                    items: const [
+                    items: [
                       DropdownMenuItem(value: null, child: Text('Todos')),
                       DropdownMenuItem(
                         value: ReportPetType.dog,
@@ -198,15 +199,15 @@ class _ReportListFiltersSheetState extends State<ReportListFiltersSheet> {
                       ),
                     ],
                     onChanged: (value) => setState(() => _petType = value),
-                    decoration: reportListSheetInput('Selecciona'),
+                    decoration: reportListSheetInput(context, 'Selecciona'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 ReportListLabeledField(
                   label: 'Estado',
                   child: DropdownButtonFormField<ReportStatus?>(
                     initialValue: _status,
-                    items: const [
+                    items: [
                       DropdownMenuItem(value: null, child: Text('Todos')),
                       DropdownMenuItem(
                         value: ReportStatus.active,
@@ -230,10 +231,10 @@ class _ReportListFiltersSheetState extends State<ReportListFiltersSheet> {
                       ),
                     ],
                     onChanged: (value) => setState(() => _status = value),
-                    decoration: reportListSheetInput('Selecciona'),
+                    decoration: reportListSheetInput(context, 'Selecciona'),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Row(
                   children: [
                     Expanded(
@@ -248,10 +249,10 @@ class _ReportListFiltersSheetState extends State<ReportListFiltersSheet> {
                             _queryCtrl.clear();
                           });
                         },
-                        child: const Text('Limpiar'),
+                        child: Text('Limpiar'),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: FilledButton(
                         onPressed: () {
@@ -271,7 +272,7 @@ class _ReportListFiltersSheetState extends State<ReportListFiltersSheet> {
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                         ),
-                        child: const Text('Aplicar'),
+                        child: Text('Aplicar'),
                       ),
                     ),
                   ],
@@ -305,39 +306,39 @@ class ReportListFeedbackState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.appColors.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 42, color: AppColors.textHint),
-              const SizedBox(height: 12),
+              Icon(icon, size: 42, color: context.appColors.textHint),
+              SizedBox(height: 12),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               TextButton(onPressed: onAction, child: Text(actionLabel)),
             ],
           ),
@@ -365,27 +366,27 @@ class ReportListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateLabel = reportRelativeTimeLabel(report.occurredAt);
     final typeColor = report.type == ReportType.lost
-        ? AppColors.lostPet
-        : AppColors.foundPet;
+        ? context.appColors.lostPet
+        : context.appColors.foundPet;
     final typeBg = report.type == ReportType.lost
-        ? AppColors.pastelPink
-        : AppColors.pastelGreen;
-    final statusColors = reportListStatusColors(report.status);
+        ? context.appColors.pastelPink
+        : context.appColors.pastelGreen;
+    final statusColors = reportListStatusColors(context, report.status);
 
     return InkWell(
       onTap: () => context.push(AppRoutes.reportDetail(report.id)),
       borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.appColors.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(10),
               blurRadius: 14,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
@@ -407,7 +408,7 @@ class ReportListCard extends StatelessWidget {
                     : ReportListPlaceholder(type: report.type),
               ),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,55 +438,55 @@ class ReportListCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Text(
                     reportTitle(report),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                   if (report.petBreed?.trim().isNotEmpty == true)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: EdgeInsets.only(top: 4),
                       child: Text(
                         report.petBreed!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                     ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     reportLocationLabel(report),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                       height: 1.3,
                     ),
                   ),
                   if (secondaryInfo != null) ...[
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(
                           secondaryInfoIcon,
                           size: 14,
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             secondaryInfo!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textHint,
+                              color: context.appColors.textHint,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -493,28 +494,28 @@ class ReportListCard extends StatelessWidget {
                       ],
                     ),
                   ],
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.schedule_rounded,
                         size: 14,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           dateLabel,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textHint,
+                            color: context.appColors.textHint,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         Icons.chevron_right_rounded,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ],
                   ),
@@ -536,9 +537,11 @@ class ReportListPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = type == ReportType.lost
-        ? AppColors.pastelPink
-        : AppColors.pastelGreen;
-    final fg = type == ReportType.lost ? AppColors.lostPet : AppColors.foundPet;
+        ? context.appColors.pastelPink
+        : context.appColors.pastelGreen;
+    final fg = type == ReportType.lost
+        ? context.appColors.lostPet
+        : context.appColors.foundPet;
 
     return Container(
       color: bg,
@@ -569,7 +572,7 @@ class ReportListBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(999),
@@ -594,18 +597,18 @@ class ReportListSummaryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
+          color: context.appColors.textSecondary,
         ),
       ),
     );
@@ -629,36 +632,36 @@ class ReportListLabeledField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         child,
       ],
     );
   }
 }
 
-InputDecoration reportListSheetInput(String hint) {
+InputDecoration reportListSheetInput(BuildContext context, String hint) {
   return InputDecoration(
     hintText: hint,
     filled: true,
-    fillColor: AppColors.surface,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    fillColor: context.appColors.surface,
+    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.border),
+      borderSide: BorderSide(color: context.appColors.border),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.border),
+      borderSide: BorderSide(color: context.appColors.border),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      borderSide: BorderSide(color: AppColors.primary, width: 1.5),
     ),
   );
 }
@@ -676,31 +679,34 @@ String reportListSortLabel(ReportListSortOrder sortOrder) =>
       ReportListSortOrder.proximity => 'Proximidad',
     };
 
-StatusPalette reportListStatusColors(ReportStatus status) => switch (status) {
-  ReportStatus.active => const StatusPalette(
+StatusPalette reportListStatusColors(
+  BuildContext context,
+  ReportStatus status,
+) => switch (status) {
+  ReportStatus.active => StatusPalette(
     foreground: AppColors.primary,
-    background: AppColors.pastelBlue,
+    background: context.appColors.pastelBlue,
   ),
-  ReportStatus.underReview => const StatusPalette(
-    foreground: AppColors.warning,
-    background: AppColors.pastelYellow,
+  ReportStatus.underReview => StatusPalette(
+    foreground: context.appColors.warning,
+    background: context.appColors.pastelYellow,
   ),
-  ReportStatus.resolved => const StatusPalette(
-    foreground: AppColors.foundPet,
-    background: AppColors.pastelGreen,
+  ReportStatus.resolved => StatusPalette(
+    foreground: context.appColors.foundPet,
+    background: context.appColors.pastelGreen,
   ),
-  ReportStatus.closed => const StatusPalette(
-    foreground: AppColors.textSecondary,
-    background: AppColors.border,
+  ReportStatus.closed => StatusPalette(
+    foreground: context.appColors.textSecondary,
+    background: context.appColors.border,
   ),
-  ReportStatus.reported => const StatusPalette(
-    foreground: AppColors.error,
-    background: AppColors.pastelPink,
+  ReportStatus.reported => StatusPalette(
+    foreground: context.appColors.error,
+    background: context.appColors.pastelPink,
   ),
 };
 
 class StatusPalette {
-  const StatusPalette({required this.foreground, required this.background});
+  StatusPalette({required this.foreground, required this.background});
 
   final Color foreground;
   final Color background;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
@@ -17,7 +19,7 @@ class LoginPage extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: AppColors.error,
+              backgroundColor: context.appColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -29,16 +31,16 @@ class LoginPage extends StatelessWidget {
       child: Scaffold(
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
+            padding: EdgeInsets.symmetric(horizontal: 28),
             child: Column(
               children: [
-                const Spacer(flex: 2),
-                _buildHero(),
-                const Spacer(flex: 2),
+                Spacer(flex: 2),
+                _buildHero(context),
+                Spacer(flex: 2),
                 _buildSignInSection(context),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 _buildFooter(context),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
               ],
             ),
           ),
@@ -47,35 +49,35 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(BuildContext context) {
     return Column(
       children: [
         Container(
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            color: AppColors.primaryLight,
+            color: context.appColors.primaryLight,
             borderRadius: BorderRadius.circular(28),
           ),
-          child: const Icon(Icons.pets, size: 52, color: AppColors.primary),
+          child: Icon(Icons.pets, size: 52, color: AppColors.primary),
         ),
-        const SizedBox(height: 28),
-        const Text(
+        SizedBox(height: 28),
+        Text(
           'App Mascotas',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
             letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 12),
-        const Text(
+        SizedBox(height: 12),
+        Text(
           'Ayuda a encontrar mascotas perdidas\nen tu comunidad.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16,
-            color: AppColors.textSecondary,
+            color: context.appColors.textSecondary,
             height: 1.5,
           ),
         ),
@@ -96,13 +98,27 @@ class LoginPage extends StatelessWidget {
               onTap: isLoading
                   ? null
                   : () => context.read<AuthBloc>().add(
-                      const AuthGoogleSignInRequested(),
+                      AuthGoogleSignInRequested(),
                     ),
+            ),
+            SizedBox(height: 12),
+            _ExploreAsGuestButton(
+              isDisabled: isLoading,
+              onTap: isLoading ? null : () => _returnToPublicArea(context),
             ),
           ],
         );
       },
     );
+  }
+
+  void _returnToPublicArea(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+
+    context.go(AppRoutes.home);
   }
 
   Widget _buildFooter(BuildContext context) {
@@ -111,13 +127,13 @@ class LoginPage extends StatelessWidget {
       children: [
         Text(
           'Al continuar aceptas los ',
-          style: TextStyle(fontSize: 12, color: AppColors.textHint),
+          style: TextStyle(fontSize: 12, color: context.appColors.textHint),
         ),
         GestureDetector(
           onTap: () {
             /* TODO: abrir términos */
           },
-          child: const Text(
+          child: Text(
             'Términos',
             style: TextStyle(
               fontSize: 12,
@@ -128,13 +144,13 @@ class LoginPage extends StatelessWidget {
         ),
         Text(
           ' y la ',
-          style: TextStyle(fontSize: 12, color: AppColors.textHint),
+          style: TextStyle(fontSize: 12, color: context.appColors.textHint),
         ),
         GestureDetector(
           onTap: () {
             /* TODO: abrir privacidad */
           },
-          child: const Text(
+          child: Text(
             'Privacidad',
             style: TextStyle(
               fontSize: 12,
@@ -144,6 +160,41 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ExploreAsGuestButton extends StatelessWidget {
+  const _ExploreAsGuestButton({required this.isDisabled, required this.onTap});
+
+  final bool isDisabled;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: onTap,
+      icon: Icon(
+        Icons.arrow_back_rounded,
+        size: 18,
+        color: isDisabled
+            ? context.appColors.textHint
+            : context.appColors.primaryDark,
+      ),
+      label: Text(
+        'Ahora no, seguir explorando',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: isDisabled
+              ? context.appColors.textHint
+              : context.appColors.primaryDark,
+        ),
+      ),
+      style: TextButton.styleFrom(
+        minimumSize: Size.fromHeight(48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
     );
   }
 }
@@ -159,22 +210,22 @@ class _GoogleSignInButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: Duration(milliseconds: 150),
         height: 56,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border, width: 1.5),
+          border: Border.all(color: context.appColors.border, width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(10),
               blurRadius: 12,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
         child: isLoading
-            ? const Center(
+            ? Center(
                 child: SizedBox(
                   width: 22,
                   height: 22,
@@ -191,19 +242,19 @@ class _GoogleSignInButton extends StatelessWidget {
                     'assets/icons/google_logo.png',
                     width: 22,
                     height: 22,
-                    errorBuilder: (context, error, _) => const Icon(
+                    errorBuilder: (context, error, _) => Icon(
                       Icons.g_mobiledata,
                       size: 26,
-                      color: AppColors.textPrimary,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  const Text(
+                  SizedBox(width: 12),
+                  Text(
                     'Continuar con Google',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ],

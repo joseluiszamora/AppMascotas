@@ -56,7 +56,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppColors.error : AppColors.success,
+        backgroundColor: isError
+            ? context.appColors.error
+            : context.appColors.success,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -71,7 +73,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
       PetOperationInProgress(:final pets) => pets,
       PetOperationSuccess(:final pets) => pets,
       PetError(:final pets) => pets,
-      _ => const <PetEntity>[],
+      _ => <PetEntity>[],
     };
 
     for (final pet in pets) {
@@ -261,30 +263,30 @@ class _PetFormScreenState extends State<PetFormScreen> {
         final isSaving = state is PetOperationInProgress;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.appColors.background,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: context.appColors.background,
             surfaceTintColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.close_rounded,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             title: Text(
               _isEditing ? 'Editar mascota' : 'Nueva mascota',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
             centerTitle: true,
             actions: [
               if (isSaving)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(right: 16),
                   child: Center(
                     child: SizedBox(
@@ -300,7 +302,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
               else
                 TextButton(
                   onPressed: _submit,
-                  child: const Text(
+                  child: Text(
                     'Guardar',
                     style: TextStyle(
                       fontSize: 15,
@@ -314,15 +316,15 @@ class _PetFormScreenState extends State<PetFormScreen> {
           body: Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+              padding: EdgeInsets.fromLTRB(24, 8, 24, 40),
               children: [
                 // ── Fotos ──
                 _buildPhotosSection(state),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
 
                 // ── Nombre ──
                 _buildLabel('Nombre *'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildTextField(
                   controller: _nameCtrl,
                   hint: 'Nombre de tu mascota',
@@ -331,33 +333,33 @@ class _PetFormScreenState extends State<PetFormScreen> {
                       ? 'Ingresa el nombre'
                       : null,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Tipo ──
                 _buildLabel('Tipo *'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildTypeSelector(isSaving),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Raza ──
                 _buildLabel('Raza'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildTextField(
                   controller: _breedCtrl,
                   hint: 'Ej. Labrador, Siamés... (opcional)',
                   enabled: !isSaving,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Sexo ──
                 _buildLabel('Sexo'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildSexSelector(isSaving),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Edad ──
                 _buildLabel('Edad (aproximada)'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
@@ -369,7 +371,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
                         validator: _validateAge,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: _buildTextField(
                         controller: _ageMonthsCtrl,
@@ -381,48 +383,48 @@ class _PetFormScreenState extends State<PetFormScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Color ──
                 _buildLabel('Color predominante'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildTextField(
                   controller: _colorCtrl,
                   hint: 'Ej. Negro, Atigrado, Blanco y marrón...',
                   enabled: !isSaving,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Tamaño ──
                 _buildLabel('Tamaño'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildSizeSelector(isSaving),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Características distintivas ──
                 _buildLabel('Características distintivas'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildTextField(
                   controller: _featuresCtrl,
                   hint: 'Collar rojo, mancha en el ojo derecho...',
                   enabled: !isSaving,
                   maxLines: 3,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Estado ──
                 _buildLabel('Estado'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildStatusSelector(isSaving),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Toggles médicos ──
                 _buildMedicalCard(isSaving),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // ── Chip ──
                 _buildLabel('Número de microchip'),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildTextField(
                   controller: _chipCtrl,
                   hint: 'Opcional',
@@ -446,7 +448,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel('Fotos'),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         SizedBox(
           height: 100,
           child: ListView(
@@ -455,17 +457,17 @@ class _PetFormScreenState extends State<PetFormScreen> {
               // Fotos existentes
               ...existingPhotos.map(
                 (photo) => Padding(
-                  padding: const EdgeInsets.only(right: 10),
+                  padding: EdgeInsets.only(right: 10),
                   child: PhotoSelectionThumbnail(
                     onRemove: () => _removeExistingPhoto(photo),
                     child: Image.network(
                       photo.url,
                       fit: BoxFit.cover,
                       errorBuilder: (_, error, stackTrace) => Container(
-                        color: AppColors.border,
-                        child: const Icon(
+                        color: context.appColors.border,
+                        child: Icon(
                           Icons.broken_image_rounded,
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                         ),
                       ),
                     ),
@@ -475,7 +477,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
               // Fotos locales pendientes (solo al crear)
               ..._pendingPhotos.map(
                 (file) => Padding(
-                  padding: const EdgeInsets.only(right: 10),
+                  padding: EdgeInsets.only(right: 10),
                   child: PhotoSelectionThumbnail(
                     onRemove: () => setState(() => _pendingPhotos.remove(file)),
                     child: Image.file(file, fit: BoxFit.cover),
@@ -510,24 +512,28 @@ class _PetFormScreenState extends State<PetFormScreen> {
             onTap: disabled ? null : () => setState(() => _type = type),
             child: Container(
               margin: EdgeInsets.only(right: opt.$1 != PetType.other ? 8 : 0),
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: selected ? AppColors.primary : AppColors.surface,
+                color: selected ? AppColors.primary : context.appColors.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: selected ? AppColors.primary : AppColors.border,
+                  color: selected
+                      ? AppColors.primary
+                      : context.appColors.border,
                 ),
               ),
               child: Column(
                 children: [
-                  Text(emoji, style: const TextStyle(fontSize: 22)),
-                  const SizedBox(height: 4),
+                  Text(emoji, style: TextStyle(fontSize: 22)),
+                  SizedBox(height: 4),
                   Text(
                     label,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : AppColors.textSecondary,
+                      color: selected
+                          ? Colors.white
+                          : context.appColors.textSecondary,
                     ),
                   ),
                 ],
@@ -574,8 +580,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
     ];
 
     Color chipColor(PetStatus s) => switch (s) {
-      PetStatus.lost => AppColors.lostPet,
-      PetStatus.found => AppColors.foundPet,
+      PetStatus.lost => context.appColors.lostPet,
+      PetStatus.found => context.appColors.foundPet,
       _ => AppColors.primary,
     };
 
@@ -588,12 +594,12 @@ class _PetFormScreenState extends State<PetFormScreen> {
         return GestureDetector(
           onTap: disabled ? null : () => setState(() => _status = status),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: selected ? color.withAlpha(25) : AppColors.surface,
+              color: selected ? color.withAlpha(25) : context.appColors.surface,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: selected ? color : AppColors.border,
+                color: selected ? color : context.appColors.border,
                 width: selected ? 2 : 1,
               ),
             ),
@@ -602,7 +608,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? color : AppColors.textSecondary,
+                color: selected ? color : context.appColors.textSecondary,
               ),
             ),
           ),
@@ -625,12 +631,14 @@ class _PetFormScreenState extends State<PetFormScreen> {
         return GestureDetector(
           onTap: onSelect != null ? () => onSelect(value) : null,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary : AppColors.surface,
+              color: isSelected ? AppColors.primary : context.appColors.surface,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.border,
+                color: isSelected
+                    ? AppColors.primary
+                    : context.appColors.border,
               ),
             ),
             child: Text(
@@ -638,7 +646,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
+                color: isSelected
+                    ? Colors.white
+                    : context.appColors.textSecondary,
               ),
             ),
           ),
@@ -650,9 +660,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
   Widget _buildMedicalCard(bool disabled) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Column(
         children: [
@@ -661,37 +671,43 @@ class _PetFormScreenState extends State<PetFormScreen> {
             onChanged: disabled
                 ? null
                 : (v) => setState(() => _isVaccinated = v),
-            title: const Text(
+            title: Text(
               'Vacunado/a',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Tiene sus vacunas al día',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 12,
+                color: context.appColors.textSecondary,
+              ),
             ),
             activeThumbColor: AppColors.primary,
           ),
-          Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: context.appColors.border),
           SwitchListTile(
             value: _isSterilized,
             onChanged: disabled
                 ? null
                 : (v) => setState(() => _isSterilized = v),
-            title: const Text(
+            title: Text(
               'Esterilizado/a',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Ha sido esterilizado/a',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 12,
+                color: context.appColors.textSecondary,
+              ),
             ),
             activeThumbColor: AppColors.primary,
           ),
@@ -703,10 +719,10 @@ class _PetFormScreenState extends State<PetFormScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+        color: context.appColors.textPrimary,
       ),
     );
   }
@@ -725,31 +741,28 @@ class _PetFormScreenState extends State<PetFormScreen> {
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+      style: TextStyle(fontSize: 15, color: context.appColors.textPrimary),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
+        hintStyle: TextStyle(color: context.appColors.textHint, fontSize: 14),
         filled: true,
-        fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        fillColor: context.appColors.surface,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderSide: BorderSide(color: context.appColors.error),
         ),
       ),
     );

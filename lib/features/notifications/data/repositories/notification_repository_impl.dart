@@ -3,7 +3,7 @@ import '../../domain/repositories/notification_repository.dart';
 import '../providers/notification_provider.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
-  const NotificationRepositoryImpl(this._provider);
+  NotificationRepositoryImpl(this._provider);
 
   final NotificationProvider _provider;
 

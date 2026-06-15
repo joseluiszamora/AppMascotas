@@ -5,7 +5,7 @@ import '../../domain/repositories/pet_repository.dart';
 import '../providers/pet_provider.dart';
 
 class PetRepositoryImpl implements PetRepository {
-  const PetRepositoryImpl(this._provider);
+  PetRepositoryImpl(this._provider);
   final PetProvider _provider;
 
   @override

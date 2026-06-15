@@ -44,7 +44,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage!),
-              backgroundColor: AppColors.error,
+              backgroundColor: context.appColors.error,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -53,36 +53,39 @@ class _NotificationsPageState extends State<NotificationsPage> {
       },
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.appColors.background,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: context.appColors.background,
             surfaceTintColor: Colors.transparent,
             elevation: 0,
-            title: const Text(
+            title: Text(
               'Notificaciones',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
           body: SafeArea(
             child: state.isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
                 : state.notifications.isEmpty
                 ? _EmptyNotifications(
-                    onRefresh: () => context.read<NotificationCubit>().loadNotifications(),
+                    onRefresh: () =>
+                        context.read<NotificationCubit>().loadNotifications(),
                   )
                 : RefreshIndicator(
                     color: AppColors.primary,
-                    onRefresh: () => context.read<NotificationCubit>().loadNotifications(),
+                    onRefresh: () =>
+                        context.read<NotificationCubit>().loadNotifications(),
                     child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                      padding: EdgeInsets.fromLTRB(20, 12, 20, 32),
                       itemCount: state.notifications.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final notification = state.notifications[index];
                         return _NotificationCard(
@@ -100,10 +103,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 }
 
 class _NotificationCard extends StatelessWidget {
-  const _NotificationCard({
-    required this.notification,
-    required this.onTap,
-  });
+  const _NotificationCard({required this.notification, required this.onTap});
 
   final AppNotificationEntity notification;
   final VoidCallback onTap;
@@ -111,9 +111,16 @@ class _NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLost = notification.type == AppNotificationType.nearbyLostReport;
-    final badgeColor = isLost ? AppColors.lostPet : AppColors.foundPet;
-    final badgeBg = isLost ? AppColors.pastelPink : AppColors.pastelGreen;
-    final dateLabel = DateFormat('d MMM, HH:mm', 'es').format(notification.createdAt);
+    final badgeColor = isLost
+        ? context.appColors.lostPet
+        : context.appColors.foundPet;
+    final badgeBg = isLost
+        ? context.appColors.pastelPink
+        : context.appColors.pastelGreen;
+    final dateLabel = DateFormat(
+      'd MMM, HH:mm',
+      'es',
+    ).format(notification.createdAt);
 
     return Material(
       color: Colors.transparent,
@@ -121,18 +128,22 @@ class _NotificationCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
         child: Ink(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: notification.isRead ? AppColors.surface : Colors.white,
+            color: notification.isRead
+                ? context.appColors.surface
+                : Colors.white,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: notification.isRead ? AppColors.border : badgeColor.withAlpha(90),
+              color: notification.isRead
+                  ? context.appColors.border
+                  : badgeColor.withAlpha(90),
             ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withAlpha(10),
                 blurRadius: 14,
-                offset: const Offset(0, 4),
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -151,7 +162,7 @@ class _NotificationCard extends StatelessWidget {
                   color: badgeColor,
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,8 +174,10 @@ class _NotificationCard extends StatelessWidget {
                             notification.title,
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.w800,
-                              color: AppColors.textPrimary,
+                              fontWeight: notification.isRead
+                                  ? FontWeight.w600
+                                  : FontWeight.w800,
+                              color: context.appColors.textPrimary,
                             ),
                           ),
                         ),
@@ -172,29 +185,29 @@ class _NotificationCard extends StatelessWidget {
                           Container(
                             width: 10,
                             height: 10,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       notification.body,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         height: 1.35,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     Text(
                       dateLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textHint,
+                        color: context.appColors.textHint,
                       ),
                     ),
                   ],
@@ -216,21 +229,21 @@ class _EmptyNotifications extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      padding: EdgeInsets.fromLTRB(20, 24, 20, 32),
       children: [
         Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.appColors.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
-          child: const Column(
+          child: Column(
             children: [
               Icon(
                 Icons.notifications_none_rounded,
                 size: 42,
-                color: AppColors.textHint,
+                color: context.appColors.textHint,
               ),
               SizedBox(height: 12),
               Text(
@@ -238,7 +251,7 @@ class _EmptyNotifications extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
               ),
               SizedBox(height: 8),
@@ -248,7 +261,7 @@ class _EmptyNotifications extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   height: 1.4,
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                 ),
               ),
             ],

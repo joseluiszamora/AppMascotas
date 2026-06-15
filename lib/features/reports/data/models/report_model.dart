@@ -38,7 +38,9 @@ class ReportModel {
       foundPetSize: _parsePetSize(json['found_pet_size'] as String?),
       foundPetDescription: json['found_pet_description'] as String?,
       photos: photosRaw
-          .map((photo) => ReportPhotoModel.fromJson(photo as Map<String, dynamic>))
+          .map(
+            (photo) => ReportPhotoModel.fromJson(photo as Map<String, dynamic>),
+          )
           .toList(),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),

@@ -5,7 +5,7 @@ import '../providers/auth_provider.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final AuthProvider _provider;
 
-  const AuthRepositoryImpl(this._provider);
+  AuthRepositoryImpl(this._provider);
 
   @override
   Stream<UserEntity?> get authStateChanges => _provider.authStateChanges;

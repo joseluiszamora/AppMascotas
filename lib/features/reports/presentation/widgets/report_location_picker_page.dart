@@ -6,10 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ReportLocationSelection {
-  const ReportLocationSelection({
-    required this.latitude,
-    required this.longitude,
-  });
+  ReportLocationSelection({required this.latitude, required this.longitude});
 
   final double latitude;
   final double longitude;
@@ -38,14 +35,14 @@ class ReportLocationPickerCard extends StatelessWidget {
       onTap: disabled ? null : onTap,
       borderRadius: BorderRadius.circular(18),
       child: Ink(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: hasSelection
                 ? AppColors.primary.withAlpha(80)
-                : AppColors.border,
+                : context.appColors.border,
           ),
         ),
         child: Row(
@@ -54,12 +51,12 @@ class ReportLocationPickerCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.pastelBlue,
+                color: context.appColors.pastelBlue,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(Icons.place_rounded, color: AppColors.primary),
+              child: Icon(Icons.place_rounded, color: AppColors.primary),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,28 +65,31 @@ class ReportLocationPickerCard extends StatelessWidget {
                     hasSelection
                         ? 'Punto seleccionado en el mapa'
                         : 'Selecciona el punto en el mapa',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     hasSelection
                         ? '$latitude, $longitude'
                         : 'Se abrirá el mapa con tu ubicación actual para marcar el lugar exacto.',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                       height: 1.35,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textHint),
+            SizedBox(width: 8),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: context.appColors.textHint,
+            ),
           ],
         ),
       ),
@@ -183,9 +183,7 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
       );
 
       if (!mounted) return;
@@ -211,7 +209,7 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.error,
+        backgroundColor: context.appColors.error,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -237,16 +235,16 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
     final selectedLocation = _selectedLocation;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
+        title: Text(
           'Seleccionar ubicación',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
       ),
@@ -254,20 +252,20 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+              padding: EdgeInsets.fromLTRB(20, 8, 20, 12),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                padding: EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.appColors.surface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: context.appColors.border),
                 ),
-                child: const Text(
+                child: Text(
                   'Toca el mapa para mover el marcador al punto aproximado del reporte.',
                   style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                     fontWeight: FontWeight.w600,
                     height: 1.35,
                   ),
@@ -276,7 +274,7 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: Stack(
@@ -306,10 +304,10 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
                                   point: selectedLocation,
                                   width: 52,
                                   height: 52,
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.location_on_rounded,
                                     size: 44,
-                                    color: AppColors.error,
+                                    color: context.appColors.error,
                                   ),
                                 ),
                             ],
@@ -324,17 +322,17 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
                           onPressed: _isLocating
                               ? null
                               : _centerOnCurrentLocation,
-                          backgroundColor: AppColors.surface,
+                          backgroundColor: context.appColors.surface,
                           foregroundColor: AppColors.primary,
                           child: _isLocating
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Icon(Icons.my_location_rounded),
+                              : Icon(Icons.my_location_rounded),
                         ),
                       ),
                     ],
@@ -343,37 +341,37 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.appColors.surface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: context.appColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Punto seleccionado',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       selectedLocation == null
                           ? 'Aún no has seleccionado una ubicación.'
                           : '${selectedLocation.latitude.toStringAsFixed(6)}, ${selectedLocation.longitude.toStringAsFixed(6)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -386,8 +384,8 @@ class _ReportLocationPickerPageState extends State<ReportLocationPickerPage> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        icon: const Icon(Icons.check_rounded),
-                        label: const Text(
+                        icon: Icon(Icons.check_rounded),
+                        label: Text(
                           'Usar esta ubicación',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),

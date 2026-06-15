@@ -111,9 +111,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       listener: (context, state) {
         if (state is ProfileUpdateSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Perfil actualizado correctamente'),
-              backgroundColor: AppColors.foundPet,
+              backgroundColor: context.appColors.foundPet,
             ),
           );
           Navigator.of(context).pop(state.profile);
@@ -121,7 +121,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: AppColors.error,
+              backgroundColor: context.appColors.error,
             ),
           );
         }
@@ -130,31 +130,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
         final isSaving = state is ProfileUpdating;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.appColors.background,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: context.appColors.background,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_ios_rounded,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
                 size: 20,
               ),
               onPressed: isSaving ? null : () => Navigator.of(context).pop(),
             ),
-            title: const Text(
+            title: Text(
               'Editar perfil',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
             actions: [
               Padding(
-                padding: const EdgeInsets.only(right: 16),
+                padding: EdgeInsets.only(right: 16),
                 child: isSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
@@ -164,7 +164,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       )
                     : GestureDetector(
                         onTap: _submit,
-                        child: const Text(
+                        child: Text(
                           'Guardar',
                           style: TextStyle(
                             fontSize: 15,
@@ -179,14 +179,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
           body: Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               children: [
                 _buildAvatarSection(isSaving),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
 
                 // Datos personales
                 _buildSectionTitle('Datos personales'),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _buildTextField(
                   controller: _firstNameCtrl,
                   label: 'Nombre',
@@ -197,7 +197,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       : null,
                   enabled: !isSaving,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _buildTextField(
                   controller: _lastNameCtrl,
                   label: 'Apellidos',
@@ -205,7 +205,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   icon: Icons.person_outline_rounded,
                   enabled: !isSaving,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _buildTextField(
                   controller: _phoneCtrl,
                   label: 'Teléfono',
@@ -214,25 +214,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   keyboardType: TextInputType.phone,
                   enabled: !isSaving,
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 _buildPhoneVisibleToggle(isSaving),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
 
                 // Preferencias de mascotas
                 _buildSectionTitle('Preferencias de mascotas'),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _buildPetPreferenceSelector(isSaving),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
 
                 // Notificaciones
                 _buildSectionTitle('Notificaciones'),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _buildNotificationsCard(isSaving),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
 
                 // Botón guardar
                 _buildSaveButton(isSaving),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
               ],
             ),
           ),
@@ -251,11 +251,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
             size: 104,
             isCircular: true,
             overlayAction: Material(
-              color: isSaving ? AppColors.border : AppColors.primary,
-              shape: const CircleBorder(),
+              color: isSaving ? context.appColors.border : AppColors.primary,
+              shape: CircleBorder(),
               child: InkWell(
                 onTap: isSaving ? null : _pickAvatar,
-                customBorder: const CircleBorder(),
+                customBorder: CircleBorder(),
                 child: Container(
                   width: 32,
                   height: 32,
@@ -263,7 +263,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.add_a_photo_rounded,
                     size: 16,
                     color: Colors.white,
@@ -278,9 +278,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     _currentAvatarUrl!,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
-                      color: AppColors.primaryLight,
+                      color: context.appColors.primaryLight,
                       alignment: Alignment.center,
-                      child: const Icon(
+                      child: Icon(
                         Icons.person_rounded,
                         size: 48,
                         color: AppColors.primary,
@@ -288,38 +288,43 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   )
                 : Container(
-                    color: AppColors.primaryLight,
+                    color: context.appColors.primaryLight,
                     alignment: Alignment.center,
-                    child: const Icon(
+                    child: Icon(
                       Icons.person_rounded,
                       size: 48,
                       color: AppColors.primary,
                     ),
                   ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Wrap(
             spacing: 12,
             alignment: WrapAlignment.center,
             children: [
               TextButton.icon(
                 onPressed: isSaving ? null : _pickAvatar,
-                icon: const Icon(Icons.add_a_photo_rounded, size: 18),
+                icon: Icon(Icons.add_a_photo_rounded, size: 18),
                 label: Text(hasAvatar ? 'Cambiar foto' : 'Agregar foto'),
               ),
               if (hasAvatar)
                 TextButton.icon(
                   onPressed: isSaving ? null : _clearAvatarSelection,
-                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                  label: const Text('Quitar'),
-                  style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                  icon: Icon(Icons.delete_outline_rounded, size: 18),
+                  label: Text('Quitar'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: context.appColors.error,
+                  ),
                 ),
             ],
           ),
-          const Text(
+          Text(
             'Usa una foto clara para que la comunidad te identifique mejor.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(
+              fontSize: 12,
+              color: context.appColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -329,10 +334,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+        color: context.appColors.textPrimary,
         letterSpacing: -0.2,
       ),
     );
@@ -352,42 +357,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
       enabled: enabled,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+      style: TextStyle(fontSize: 15, color: context.appColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: AppColors.textHint, size: 20),
-        labelStyle: const TextStyle(
-          color: AppColors.textSecondary,
+        prefixIcon: Icon(icon, color: context.appColors.textHint, size: 20),
+        labelStyle: TextStyle(
+          color: context.appColors.textSecondary,
           fontSize: 14,
         ),
-        hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
+        hintStyle: TextStyle(color: context.appColors.textHint, fontSize: 14),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: context.appColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: context.appColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderSide: BorderSide(color: context.appColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+          borderSide: BorderSide(color: context.appColors.error, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
@@ -395,24 +397,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildPhoneVisibleToggle(bool disabled) {
     return Row(
       children: [
-        const SizedBox(width: 4),
+        SizedBox(width: 4),
         Switch.adaptive(
           value: _phoneVisible,
           onChanged: disabled ? null : (v) => setState(() => _phoneVisible = v),
           activeThumbColor: AppColors.primary,
-          activeTrackColor: AppColors.primaryLight,
+          activeTrackColor: context.appColors.primaryLight,
         ),
-        const SizedBox(width: 8),
-        const Text(
+        SizedBox(width: 8),
+        Text(
           'Mostrar teléfono a otros usuarios',
-          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          style: TextStyle(
+            fontSize: 13,
+            color: context.appColors.textSecondary,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildPetPreferenceSelector(bool disabled) {
-    const options = [
+    final options = [
       (value: PetPreference.dogs, label: 'Perros', icon: '🐶'),
       (value: PetPreference.cats, label: 'Gatos', icon: '🐱'),
       (value: PetPreference.both, label: 'Ambos', icon: '🐾'),
@@ -429,29 +434,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ? null
               : () => setState(() => _petPreference = opt.value),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            duration: Duration(milliseconds: 150),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primaryLight : AppColors.surface,
+              color: isSelected
+                  ? context.appColors.primaryLight
+                  : context.appColors.surface,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.border,
+                color: isSelected
+                    ? AppColors.primary
+                    : context.appColors.border,
                 width: isSelected ? 1.5 : 1,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(opt.icon, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 6),
+                Text(opt.icon, style: TextStyle(fontSize: 16)),
+                SizedBox(width: 6),
                 Text(
                   opt.label,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                     color: isSelected
-                        ? AppColors.primaryDark
-                        : AppColors.textSecondary,
+                        ? context.appColors.primaryDark
+                        : context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -465,57 +474,57 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildNotificationsCard(bool disabled) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Column(
         children: [
           SwitchListTile.adaptive(
-            title: const Text(
+            title: Text(
               'Recibir notificaciones',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Alertas de mascotas en tu zona',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 12,
+                color: context.appColors.textSecondary,
+              ),
             ),
             value: _notificationsEnabled,
             onChanged: disabled
                 ? null
                 : (v) => setState(() => _notificationsEnabled = v),
             activeThumbColor: AppColors.primary,
-            activeTrackColor: AppColors.primaryLight,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 4,
-            ),
+            activeTrackColor: context.appColors.primaryLight,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           ),
           if (_notificationsEnabled) ...[
-            const Divider(height: 1, color: AppColors.border),
+            Divider(height: 1, color: context.appColors.border),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Radio de alertas',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: context.appColors.textPrimary,
                         ),
                       ),
                       Text(
                         '$_radiusKm km',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppColors.primary,
@@ -535,19 +544,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       Text(
                         '1 km',
                         style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                         ),
                       ),
                       Text(
                         '50 km',
                         style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.textHint,
+                          color: context.appColors.textHint,
                         ),
                       ),
                     ],
@@ -568,7 +577,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         width: double.infinity,
         height: 52,
         decoration: BoxDecoration(
-          color: isSaving ? AppColors.border : AppColors.primary,
+          color: isSaving ? context.appColors.border : AppColors.primary,
           borderRadius: BorderRadius.circular(16),
           boxShadow: isSaving
               ? null
@@ -576,12 +585,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   BoxShadow(
                     color: AppColors.primary.withAlpha(60),
                     blurRadius: 16,
-                    offset: const Offset(0, 6),
+                    offset: Offset(0, 6),
                   ),
                 ],
         ),
         child: isSaving
-            ? const Center(
+            ? Center(
                 child: SizedBox(
                   width: 22,
                   height: 22,
@@ -591,7 +600,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ),
               )
-            : const Center(
+            : Center(
                 child: Text(
                   'Guardar cambios',
                   style: TextStyle(

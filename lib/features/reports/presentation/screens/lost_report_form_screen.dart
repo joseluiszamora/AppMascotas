@@ -68,8 +68,8 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
     final date = await showDatePicker(
       context: context,
       initialDate: _occurredAt,
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now().subtract(Duration(days: 365)),
+      lastDate: DateTime.now().add(Duration(days: 1)),
     );
     if (date == null || !mounted) return;
 
@@ -161,7 +161,9 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppColors.error : AppColors.success,
+        backgroundColor: isError
+            ? context.appColors.error
+            : context.appColors.success,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -202,23 +204,23 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
         final selectedPet = _findSelectedPet(state.pets);
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.appColors.background,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: context.appColors.background,
             surfaceTintColor: Colors.transparent,
             elevation: 0,
-            title: const Text(
+            title: Text(
               'Reportar perdida',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
           body: SafeArea(
             child: state.isLoadingPets
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
                 : state.pets.isEmpty
@@ -228,12 +230,12 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                 : Form(
                     key: _formKey,
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+                      padding: EdgeInsets.fromLTRB(24, 16, 24, 40),
                       children: [
                         _buildInfoCard(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildLabel('Mascota *'),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           key: ValueKey(_selectedPetId),
                           initialValue: _selectedPetId,
@@ -254,23 +256,23 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                               value == null ? 'Selecciona una mascota' : null,
                         ),
                         if (selectedPet != null) ...[
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           _SelectedPetCard(pet: selectedPet),
                         ],
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildLabel('Fotos adicionales'),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         _buildPhotosSection(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildLabel('Ubicación aproximada *'),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         ReportLocationPickerCard(
                           latitude: _latitudeCtrl.text,
                           longitude: _longitudeCtrl.text,
                           disabled: state.isSubmitting,
                           onTap: _pickLocationOnMap,
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         TextFormField(
                           controller: _locationDescriptionCtrl,
                           decoration: _inputDecoration(
@@ -278,53 +280,55 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                           ),
                           maxLines: 2,
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildLabel('Fecha y hora aproximada *'),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         InkWell(
                           onTap: state.isSubmitting ? null : _pickOccurredAt,
                           borderRadius: BorderRadius.circular(16),
                           child: Ink(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 16,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.surface,
+                              color: context.appColors.surface,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(
+                                color: context.appColors.border,
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.schedule_rounded,
                                   color: AppColors.primary,
                                 ),
-                                const SizedBox(width: 12),
+                                SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     DateFormat(
                                       'd MMM y, HH:mm',
                                       'es',
                                     ).format(_occurredAt),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 15,
-                                      color: AppColors.textPrimary,
+                                      color: context.appColors.textPrimary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
-                                const Icon(
+                                Icon(
                                   Icons.chevron_right_rounded,
-                                  color: AppColors.textHint,
+                                  color: context.appColors.textHint,
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildLabel('Descripción'),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         TextFormField(
                           controller: _descriptionCtrl,
                           maxLines: 4,
@@ -332,12 +336,12 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                             'Cuéntanos qué pasó y cualquier detalle útil para encontrarla.',
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         Container(
                           decoration: BoxDecoration(
-                            color: AppColors.surface,
+                            color: context.appColors.surface,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: context.appColors.border),
                           ),
                           child: SwitchListTile(
                             value: _showContact,
@@ -345,38 +349,38 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                                 ? null
                                 : (value) =>
                                       setState(() => _showContact = value),
-                            title: const Text(
+                            title: Text(
                               'Mostrar mis datos de contacto',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                                color: context.appColors.textPrimary,
                               ),
                             ),
-                            subtitle: const Text(
+                            subtitle: Text(
                               'Si lo activas, se podrán mostrar tus datos según la configuración de tu perfil.',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.textSecondary,
+                                color: context.appColors.textSecondary,
                               ),
                             ),
                             activeThumbColor: AppColors.primary,
                           ),
                         ),
-                        const SizedBox(height: 28),
+                        SizedBox(height: 28),
                         SizedBox(
                           height: 54,
                           child: FilledButton.icon(
                             onPressed: state.isSubmitting ? null : _submit,
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.lostPet,
+                              backgroundColor: context.appColors.lostPet,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                               ),
                             ),
                             icon: state.isSubmitting
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 18,
                                     height: 18,
                                     child: CircularProgressIndicator(
@@ -384,12 +388,12 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Icon(Icons.campaign_rounded),
+                                : Icon(Icons.campaign_rounded),
                             label: Text(
                               state.isSubmitting
                                   ? 'Publicando...'
                                   : 'Publicar reporte',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -407,16 +411,16 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
 
   Widget _buildInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.pastelPink,
+        color: context.appColors.pastelPink,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.lostPet.withAlpha(40)),
+        border: Border.all(color: context.appColors.lostPet.withAlpha(40)),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, color: AppColors.lostPet),
+          Icon(Icons.info_outline_rounded, color: context.appColors.lostPet),
           SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -424,7 +428,7 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
               style: TextStyle(
                 fontSize: 13,
                 height: 1.35,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -437,10 +441,10 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+        color: context.appColors.textPrimary,
       ),
     );
   }
@@ -453,7 +457,7 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
         children: [
           ..._photos.map(
             (file) => Padding(
-              padding: const EdgeInsets.only(right: 10),
+              padding: EdgeInsets.only(right: 10),
               child: PhotoSelectionThumbnail(
                 onRemove: () => setState(() => _photos.remove(file)),
                 child: Image.file(file, fit: BoxFit.cover),
@@ -462,7 +466,7 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
           ),
           PhotoPickerActionTile(
             onTap: _pickPhoto,
-            accentColor: AppColors.lostPet,
+            accentColor: context.appColors.lostPet,
             highlighted: _photos.isEmpty,
             hasPhotos: _photos.isNotEmpty,
           ),
@@ -474,29 +478,29 @@ class _LostReportFormScreenState extends State<LostReportFormScreen> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+      hintStyle: TextStyle(fontSize: 14, color: context.appColors.textHint),
       filled: true,
-      fillColor: AppColors.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      fillColor: context.appColors.surface,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide(color: context.appColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide(color: context.appColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.error),
+        borderSide: BorderSide(color: context.appColors.error),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+        borderSide: BorderSide(color: context.appColors.error, width: 1.5),
       ),
     );
   }
@@ -510,11 +514,11 @@ class _SelectedPetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Row(
         children: [
@@ -533,28 +537,28 @@ class _SelectedPetCard extends StatelessWidget {
                   : _PlaceholderPhoto(pet: pet),
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   pet.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   pet.breed ?? 'Sin raza especificada',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   pet.photos.isEmpty
                       ? 'Esta mascota no tiene fotos registradas aún.'
@@ -562,8 +566,8 @@ class _SelectedPetCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     color: pet.photos.isEmpty
-                        ? AppColors.warning
-                        : AppColors.textSecondary,
+                        ? context.appColors.warning
+                        : context.appColors.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -590,9 +594,9 @@ class _PlaceholderPhoto extends StatelessWidget {
     };
 
     return Container(
-      color: AppColors.pastelYellow,
+      color: context.appColors.pastelYellow,
       alignment: Alignment.center,
-      child: Text(icon, style: const TextStyle(fontSize: 28)),
+      child: Text(icon, style: TextStyle(fontSize: 28)),
     );
   }
 }
@@ -606,7 +610,7 @@ class _EmptyPetsState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -614,39 +618,42 @@ class _EmptyPetsState extends StatelessWidget {
               width: 84,
               height: 84,
               decoration: BoxDecoration(
-                color: AppColors.pastelYellow,
+                color: context.appColors.pastelYellow,
                 borderRadius: BorderRadius.circular(28),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.pets_rounded,
                 color: AppColors.primary,
                 size: 38,
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'Necesitas registrar una mascota primero',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8),
+            Text(
               'Para reportar una pérdida, primero registra la mascota en tu cuenta.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                color: context.appColors.textSecondary,
+              ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             FilledButton(
               onPressed: onAddPet,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Registrar mascota'),
+              child: Text('Registrar mascota'),
             ),
           ],
         ),

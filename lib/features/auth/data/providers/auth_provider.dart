@@ -31,7 +31,7 @@ class AuthProvider {
     try {
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        throw const AuthFailure('Inicio de sesión con Google cancelado.');
+        throw AuthFailure('Inicio de sesión con Google cancelado.');
       }
 
       final googleAuth = await googleUser.authentication;
@@ -39,7 +39,7 @@ class AuthProvider {
       final accessToken = googleAuth.accessToken;
 
       if (idToken == null) {
-        throw const AuthFailure(
+        throw AuthFailure(
           'No se pudo obtener el token de Google. Revisa el cliente OAuth web.',
         );
       }
@@ -51,7 +51,7 @@ class AuthProvider {
       );
 
       if (response.user == null) {
-        throw const AuthFailure('No se pudo autenticar con Supabase.');
+        throw AuthFailure('No se pudo autenticar con Supabase.');
       }
 
       return UserModel.fromAuthData(
@@ -67,7 +67,7 @@ class AuthProvider {
     } on AuthException catch (e) {
       throw AuthFailure(_mapSupabaseError(e));
     } catch (_) {
-      throw const AuthFailure(
+      throw AuthFailure(
         'Ocurrió un error al iniciar sesión con Google. Intenta de nuevo.',
       );
     }

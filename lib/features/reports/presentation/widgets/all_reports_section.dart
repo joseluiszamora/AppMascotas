@@ -167,9 +167,7 @@ class _AllReportsSectionState extends State<AllReportsSection> {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-        ),
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.medium),
       );
 
       _userLatitude = position.latitude;
@@ -188,7 +186,7 @@ class _AllReportsSectionState extends State<AllReportsSection> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.error,
+        backgroundColor: context.appColors.error,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -248,10 +246,10 @@ class _AllReportsSectionState extends State<AllReportsSection> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
+          padding: EdgeInsets.fromLTRB(20, 6, 20, 10),
           child: Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -260,7 +258,7 @@ class _AllReportsSectionState extends State<AllReportsSection> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -268,30 +266,27 @@ class _AllReportsSectionState extends State<AllReportsSection> {
                       'Consulta reportes tuyos y de la comunidad en un solo lugar.',
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
               if (_activeFilterCount() > 0)
-                TextButton(
-                  onPressed: _resetFilters,
-                  child: const Text('Limpiar'),
-                ),
+                TextButton(onPressed: _resetFilters, child: Text('Limpiar')),
               IconButton.filledTonal(
                 onPressed: _openFilters,
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.surface,
-                  foregroundColor: AppColors.textPrimary,
+                  backgroundColor: context.appColors.surface,
+                  foregroundColor: context.appColors.textPrimary,
                 ),
-                icon: const Icon(Icons.tune_rounded),
+                icon: Icon(Icons.tune_rounded),
               ),
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -318,13 +313,13 @@ class _AllReportsSectionState extends State<AllReportsSection> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Expanded(
           child: FutureBuilder<List<ReportEntity>>(
             future: _future,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
+                return Center(
                   child: CircularProgressIndicator(color: AppColors.primary),
                 );
               }
@@ -340,7 +335,7 @@ class _AllReportsSectionState extends State<AllReportsSection> {
                 );
               }
 
-              final reports = snapshot.data ?? const <ReportEntity>[];
+              final reports = snapshot.data ?? <ReportEntity>[];
               if (reports.isEmpty) {
                 return ReportListFeedbackState(
                   icon: Icons.assignment_outlined,
@@ -365,10 +360,9 @@ class _AllReportsSectionState extends State<AllReportsSection> {
               }
 
               return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
                 itemCount: filteredReports.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
+                separatorBuilder: (context, index) => SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final report = filteredReports[index];
                   final isMine = report.reporterId == _currentUserId;
@@ -382,10 +376,10 @@ class _AllReportsSectionState extends State<AllReportsSection> {
                         label: isMine ? 'Tuyo' : 'Comunidad',
                         color: isMine
                             ? AppColors.primary
-                            : AppColors.textSecondary,
+                            : context.appColors.textSecondary,
                         background: isMine
-                            ? AppColors.pastelBlue
-                            : AppColors.border,
+                            ? context.appColors.pastelBlue
+                            : context.appColors.border,
                       ),
                     ],
                   );

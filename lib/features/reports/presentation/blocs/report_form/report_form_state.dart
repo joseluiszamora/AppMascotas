@@ -35,7 +35,9 @@ class ReportFormState extends Equatable {
       pets: pets ?? this.pets,
       isLoadingPets: isLoadingPets ?? this.isLoadingPets,
       isSubmitting: isSubmitting ?? this.isSubmitting,
-      errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage ?? this.errorMessage,
       successMessage: clearSuccessMessage
           ? null
           : successMessage ?? this.successMessage,

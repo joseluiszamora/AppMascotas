@@ -18,7 +18,7 @@ class ReportFormCubit extends Cubit<ReportFormState> {
   }) : _getMyPets = getMyPets,
        _createLostReport = createLostReport,
        _createFoundReport = createFoundReport,
-       super(const ReportFormState());
+       super(ReportFormState());
 
   final GetMyPets _getMyPets;
   final CreateLostReport _createLostReport;

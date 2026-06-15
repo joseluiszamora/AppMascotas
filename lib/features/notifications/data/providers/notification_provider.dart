@@ -4,7 +4,7 @@ import '../../domain/entities/app_notification_entity.dart';
 import '../models/app_notification_model.dart';
 
 class NotificationProvider {
-  const NotificationProvider({required this.supabase});
+  NotificationProvider({required this.supabase});
 
   final SupabaseClient supabase;
 

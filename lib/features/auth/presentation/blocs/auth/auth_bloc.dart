@@ -23,7 +23,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }) : _authRepository = authRepository,
        _signInWithGoogle = signInWithGoogle,
        _signOut = signOut,
-       super(const AuthInitial()) {
+       super(AuthInitial()) {
     on<AuthStarted>(_onAuthStarted);
     on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
@@ -35,7 +35,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (currentUser != null) {
       emit(AuthAuthenticated(currentUser));
     } else {
-      emit(const AuthUnauthenticated());
+      emit(AuthUnauthenticated());
     }
 
     _authStateSubscription?.cancel();
@@ -49,7 +49,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = _authRepository.currentUser;
       if (user != null) emit(AuthAuthenticated(user));
     } else {
-      emit(const AuthUnauthenticated());
+      emit(AuthUnauthenticated());
     }
   }
 
@@ -57,7 +57,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthGoogleSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(AuthLoading());
     try {
       final user = await _signInWithGoogle();
       emit(AuthAuthenticated(user));
@@ -70,10 +70,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(AuthLoading());
     try {
       await _signOut();
-      emit(const AuthUnauthenticated());
+      emit(AuthUnauthenticated());
     } catch (e) {
       emit(AuthError(_mapErrorMessage(e)));
     }

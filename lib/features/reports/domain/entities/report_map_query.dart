@@ -1,7 +1,7 @@
 import 'report_entity.dart';
 
 class ReportMapQuery {
-  const ReportMapQuery({
+  ReportMapQuery({
     required this.centerLatitude,
     required this.centerLongitude,
     required this.radiusKm,

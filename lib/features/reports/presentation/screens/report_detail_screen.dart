@@ -34,17 +34,17 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Detalle del reporte',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: context.appColors.textPrimary,
           ),
         ),
         actions: [
@@ -53,21 +53,23 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             builder: (context, snapshot) {
               final report = snapshot.data;
               return IconButton(
-                onPressed: report == null ? null : () => shareReport(context, report),
+                onPressed: report == null
+                    ? null
+                    : () => shareReport(context, report),
                 tooltip: 'Compartir reporte',
-                icon: const Icon(Icons.share_rounded),
-                color: AppColors.textPrimary,
+                icon: Icon(Icons.share_rounded),
+                color: context.appColors.textPrimary,
               );
             },
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
         ],
       ),
       body: FutureBuilder<ReportEntity>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             );
           }
@@ -94,14 +96,21 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           }
 
           final isLost = report.type == ReportType.lost;
-          final badgeColor = isLost ? AppColors.lostPet : AppColors.foundPet;
-          final badgeBg = isLost ? AppColors.pastelPink : AppColors.pastelGreen;
-            final title = reportTitle(report);
-          final dateLabel = DateFormat('d MMM y, HH:mm', 'es').format(report.occurredAt);
+          final badgeColor = isLost
+              ? context.appColors.lostPet
+              : context.appColors.foundPet;
+          final badgeBg = isLost
+              ? context.appColors.pastelPink
+              : context.appColors.pastelGreen;
+          final title = reportTitle(report);
+          final dateLabel = DateFormat(
+            'd MMM y, HH:mm',
+            'es',
+          ).format(report.occurredAt);
 
           return SafeArea(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 32),
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(28),
@@ -112,12 +121,12 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                             report.primaryPhotoUrl!,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                const _ReportDetailHeroPlaceholder(),
+                                _ReportDetailHeroPlaceholder(),
                           )
-                        : const _ReportDetailHeroPlaceholder(),
+                        : _ReportDetailHeroPlaceholder(),
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -129,32 +138,33 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                     ),
                     _Badge(
                       label: reportStatusLabel(report.status),
-                      bgColor: AppColors.surface,
-                      textColor: AppColors.textSecondary,
+                      bgColor: context.appColors.surface,
+                      textColor: context.appColors.textSecondary,
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                     letterSpacing: -0.4,
                   ),
                 ),
-                if (report.petBreed != null && report.petBreed!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                if (report.petBreed != null &&
+                    report.petBreed!.trim().isNotEmpty) ...[
+                  SizedBox(height: 6),
                   Text(
                     report.petBreed!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -163,7 +173,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 14,
                           ),
@@ -171,31 +181,31 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        icon: const Icon(Icons.navigation_rounded),
-                        label: const Text(
+                        icon: Icon(Icons.navigation_rounded),
+                        label: Text(
                           'Navegar',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => shareReport(context, report),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textPrimary,
-                          side: const BorderSide(color: AppColors.border),
-                          padding: const EdgeInsets.symmetric(
+                          foregroundColor: context.appColors.textPrimary,
+                          side: BorderSide(color: context.appColors.border),
+                          padding: EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 14,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
-                          backgroundColor: AppColors.surface,
+                          backgroundColor: context.appColors.surface,
                         ),
-                        icon: const Icon(Icons.share_rounded),
-                        label: const Text(
+                        icon: Icon(Icons.share_rounded),
+                        label: Text(
                           'Compartir',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
@@ -203,7 +213,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 _InfoCard(
                   children: [
                     _InfoRow(
@@ -227,7 +237,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                         label: 'Tipo',
                         value: _petTypeLabel(report.effectivePetType!),
                       ),
-                    if (report.effectivePetColor != null && report.effectivePetColor!.trim().isNotEmpty)
+                    if (report.effectivePetColor != null &&
+                        report.effectivePetColor!.trim().isNotEmpty)
                       _InfoRow(
                         icon: Icons.palette_outlined,
                         label: 'Color',
@@ -241,16 +252,16 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _InfoCard(
                   title: 'Descripción',
                   children: [
                     Text(
                       reportDescriptionText(report),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         height: 1.45,
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                   ],
@@ -283,36 +294,39 @@ class _ReportDetailFeedback extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.appColors.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 42, color: AppColors.textHint),
-              const SizedBox(height: 12),
+              Icon(icon, size: 42, color: context.appColors.textHint),
+              SizedBox(height: 12),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.appColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: context.appColors.textSecondary,
+                ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               TextButton(onPressed: onAction, child: Text(actionLabel)),
             ],
           ),
@@ -328,13 +342,9 @@ class _ReportDetailHeroPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.pastelYellow,
+      color: context.appColors.pastelYellow,
       alignment: Alignment.center,
-      child: const Icon(
-        Icons.pets_rounded,
-        size: 54,
-        color: AppColors.primary,
-      ),
+      child: Icon(Icons.pets_rounded, size: 54, color: AppColors.primary),
     );
   }
 }
@@ -353,7 +363,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(999),
@@ -380,11 +390,11 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.appColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,13 +402,13 @@ class _InfoCard extends StatelessWidget {
           if (title != null) ...[
             Text(
               title!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.appColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
           ],
           ...children,
         ],
@@ -421,30 +431,30 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: AppColors.textHint),
-          const SizedBox(width: 10),
+          Icon(icon, size: 18, color: context.appColors.textHint),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
               ],

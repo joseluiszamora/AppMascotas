@@ -1,7 +1,7 @@
 import '../repositories/notification_repository.dart';
 
 class GetUnreadNotificationsCount {
-  const GetUnreadNotificationsCount(this._repository);
+  GetUnreadNotificationsCount(this._repository);
 
   final NotificationRepository _repository;
 

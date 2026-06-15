@@ -52,7 +52,7 @@ class AppImageCropper {
     return cropImage(
       sourcePath: sourcePath,
       title: title,
-      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
       initAspectRatio: CropAspectRatioPreset.square,
       lockAspectRatio: true,
       compressQuality: compressQuality,

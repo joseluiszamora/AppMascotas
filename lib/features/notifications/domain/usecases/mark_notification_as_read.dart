@@ -1,7 +1,7 @@
 import '../repositories/notification_repository.dart';
 
 class MarkNotificationAsRead {
-  const MarkNotificationAsRead(this._repository);
+  MarkNotificationAsRead(this._repository);
 
   final NotificationRepository _repository;
 

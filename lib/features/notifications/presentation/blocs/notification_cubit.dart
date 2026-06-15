@@ -11,7 +11,7 @@ class NotificationCubit extends Cubit<NotificationState> {
     required MarkNotificationAsRead markNotificationAsRead,
   }) : _getMyNotifications = getMyNotifications,
        _markNotificationAsRead = markNotificationAsRead,
-       super(const NotificationState());
+       super(NotificationState());
 
   final GetMyNotifications _getMyNotifications;
   final MarkNotificationAsRead _markNotificationAsRead;
@@ -28,12 +28,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         ),
       );
     } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          errorMessage: _mapError(e),
-        ),
-      );
+      emit(state.copyWith(isLoading: false, errorMessage: _mapError(e)));
     }
   }
 
