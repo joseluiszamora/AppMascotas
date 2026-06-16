@@ -121,7 +121,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ReportListFiltersSheet(
-        title: 'Filtros de tus reportes',
+        title: 'Filtros de tus avisos',
         includeLost: _includeLost,
         includeFound: _includeFound,
         petType: _petType,
@@ -155,9 +155,9 @@ class _MyReportsSectionState extends State<MyReportsSection> {
     if (!_isAuthenticated()) {
       return ReportListFeedbackState(
         icon: Icons.lock_outline_rounded,
-        title: 'Inicia sesión para ver tus reportes',
+        title: 'Inicia sesión para ver tus avisos',
         message:
-            'Tu historial personal se carga cuando entras con tu cuenta de Google.',
+            'Tus publicaciones se cargan cuando entras con tu cuenta de Google.',
         actionLabel: 'Iniciar sesión',
         onAction: _openLogin,
       );
@@ -174,7 +174,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tus reportes',
+                      'Mis avisos',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -183,7 +183,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Consulta el historial de reportes publicados por tu cuenta.',
+                      'Consulta las publicaciones que hiciste para la comunidad.',
                       style: TextStyle(
                         fontSize: 13,
                         color: context.appColors.textSecondary,
@@ -247,7 +247,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
               if (snapshot.hasError) {
                 return ReportListFeedbackState(
                   icon: Icons.wifi_off_rounded,
-                  title: 'No pudimos cargar tus reportes',
+                  title: 'No pudimos cargar tus avisos',
                   message: 'Intenta de nuevo para actualizar tu historial.',
                   actionLabel: 'Reintentar',
                   onAction: _reload,
@@ -284,6 +284,7 @@ class _MyReportsSectionState extends State<MyReportsSection> {
                 separatorBuilder: (context, index) => SizedBox(height: 12),
                 itemBuilder: (context, index) => ReportListCard(
                   report: filteredReports[index],
+                  isMine: true,
                   extraBadges: [
                     ReportListBadgeData(
                       label: 'Tuyo',

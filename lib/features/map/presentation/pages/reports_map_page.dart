@@ -21,10 +21,17 @@ import '../../../reports/presentation/widgets/my_reports_section.dart';
 import '../../../reports/presentation/widgets/report_list_components.dart';
 import '../../../reports/presentation/utils/report_actions.dart';
 
+enum ReportsMapInitialSection { list, map, mine }
+
 class ReportsMapPage extends StatefulWidget {
-  const ReportsMapPage({super.key, this.refreshToken = 0});
+  const ReportsMapPage({
+    super.key,
+    this.refreshToken = 0,
+    this.initialSection = ReportsMapInitialSection.list,
+  });
 
   final int refreshToken;
+  final ReportsMapInitialSection initialSection;
 
   @override
   State<ReportsMapPage> createState() => _ReportsMapPageState();
@@ -62,15 +69,28 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
   @override
   void initState() {
     super.initState();
+    _section = _sectionFromInitial(widget.initialSection);
     _future = _loadReports();
   }
 
   @override
   void didUpdateWidget(covariant ReportsMapPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.refreshToken != widget.refreshToken) {
+    if (oldWidget.initialSection != widget.initialSection) {
+      _section = _sectionFromInitial(widget.initialSection);
+    }
+    if (oldWidget.refreshToken != widget.refreshToken ||
+        oldWidget.initialSection != widget.initialSection) {
       _centerOnCurrentLocation();
     }
+  }
+
+  _ReportsSection _sectionFromInitial(ReportsMapInitialSection section) {
+    return switch (section) {
+      ReportsMapInitialSection.map => _ReportsSection.map,
+      ReportsMapInitialSection.mine => _ReportsSection.mine,
+      ReportsMapInitialSection.list => _ReportsSection.all,
+    };
   }
 
   Future<List<ReportEntity>> _loadReports() {
@@ -317,7 +337,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) return true;
 
-    _showMessage('Inicia sesión con Google para ver tus reportes.');
+    _showMessage('Inicia sesión con Google para ver tus avisos.');
     context.push(AppRoutes.loginWithRedirect(AppRoutes.home));
     return false;
   }
@@ -355,10 +375,10 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                     SizedBox(height: 4),
                     Text(
                       _section == _ReportsSection.all
-                          ? 'Listado principal con reportes de la comunidad'
+                          ? 'Mascotas perdidas y encontradas cerca de ti'
                           : _section == _ReportsSection.map
                           ? 'OSM · reportes activos cercanos'
-                          : 'Tus reportes con filtros por tipo, mascota y estado',
+                          : 'Tus avisos publicados y sus estados',
                       style: TextStyle(
                         fontSize: 13,
                         color: context.appColors.textSecondary,
@@ -374,7 +394,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                     ButtonSegment<_ReportsSection>(
                       value: _ReportsSection.all,
                       icon: Icon(Icons.view_list_rounded),
-                      label: Text('Todos'),
+                      label: Text('Lista'),
                     ),
                     ButtonSegment<_ReportsSection>(
                       value: _ReportsSection.map,
@@ -384,7 +404,7 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                     ButtonSegment<_ReportsSection>(
                       value: _ReportsSection.mine,
                       icon: Icon(Icons.assignment_rounded),
-                      label: Text('Mis reportes'),
+                      label: Text('Mis avisos'),
                     ),
                   ],
                   selected: <_ReportsSection>{_section},
@@ -419,9 +439,9 @@ class _ReportsMapPageState extends State<ReportsMapPage> {
                         ? MyReportsSection(refreshToken: widget.refreshToken)
                         : ReportListFeedbackState(
                             icon: Icons.lock_outline_rounded,
-                            title: 'Inicia sesión para ver tus reportes',
+                            title: 'Inicia sesión para ver tus avisos',
                             message:
-                                'El historial personal solo está disponible cuando entras con Google.',
+                                'Tus publicaciones solo están disponibles cuando entras con Google.',
                             actionLabel: 'Iniciar sesión',
                             onAction: _ensureAuthenticatedForMyReports,
                           ),

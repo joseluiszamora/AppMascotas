@@ -112,20 +112,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             child: ListView(
               padding: EdgeInsets.fromLTRB(20, 12, 20, 32),
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: SizedBox(
-                    height: 240,
-                    child: report.primaryPhotoUrl != null
-                        ? Image.network(
-                            report.primaryPhotoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _ReportDetailHeroPlaceholder(),
-                          )
-                        : _ReportDetailHeroPlaceholder(),
-                  ),
-                ),
+                _ReportPhotoGallery(report: report),
                 SizedBox(height: 18),
                 Wrap(
                   spacing: 8,
@@ -165,54 +152,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                   ),
                 ],
                 SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => openReportNavigation(context, report),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        icon: Icon(Icons.navigation_rounded),
-                        label: Text(
-                          'Navegar',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => shareReport(context, report),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: context.appColors.textPrimary,
-                          side: BorderSide(color: context.appColors.border),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          backgroundColor: context.appColors.surface,
-                        ),
-                        icon: Icon(Icons.share_rounded),
-                        label: Text(
-                          'Compartir',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                _ReportDetailActions(report: report),
                 SizedBox(height: 20),
                 _InfoCard(
                   children: [
@@ -349,6 +289,194 @@ class _ReportDetailHeroPlaceholder extends StatelessWidget {
   }
 }
 
+class _ReportPhotoGallery extends StatelessWidget {
+  const _ReportPhotoGallery({required this.report});
+
+  final ReportEntity report;
+
+  @override
+  Widget build(BuildContext context) {
+    final photos = report.photos;
+    if (photos.isEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: SizedBox(height: 240, child: _ReportDetailHeroPlaceholder()),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => _openPhotoViewer(context, photos, 0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: Stack(
+              children: [
+                SizedBox(
+                  height: 240,
+                  width: double.infinity,
+                  child: Image.network(
+                    photos.first.url,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _ReportDetailHeroPlaceholder(),
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(140),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.zoom_in_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        if (photos.length > 1) ...[
+                          SizedBox(width: 5),
+                          Text(
+                            '1/${photos.length}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (photos.length > 1) ...[
+          SizedBox(height: 10),
+          SizedBox(
+            height: 72,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: photos.length,
+              separatorBuilder: (context, index) => SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final photo = photos[index];
+                return GestureDetector(
+                  onTap: () => _openPhotoViewer(context, photos, index),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      width: 72,
+                      height: 72,
+                      child: Image.network(
+                        photo.url,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: context.appColors.border,
+                          child: Icon(
+                            Icons.broken_image_rounded,
+                            color: context.appColors.textHint,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _openPhotoViewer(
+    BuildContext context,
+    List<ReportPhotoEntity> photos,
+    int initialIndex,
+  ) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierColor: Colors.black,
+        pageBuilder: (_, _, _) =>
+            _ReportPhotoViewer(photos: photos, initialIndex: initialIndex),
+      ),
+    );
+  }
+}
+
+class _ReportPhotoViewer extends StatefulWidget {
+  const _ReportPhotoViewer({required this.photos, required this.initialIndex});
+
+  final List<ReportPhotoEntity> photos;
+  final int initialIndex;
+
+  @override
+  State<_ReportPhotoViewer> createState() => _ReportPhotoViewerState();
+}
+
+class _ReportPhotoViewerState extends State<_ReportPhotoViewer> {
+  late final PageController _controller;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _controller = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text('${_currentIndex + 1}/${widget.photos.length}'),
+      ),
+      body: PageView.builder(
+        controller: _controller,
+        itemCount: widget.photos.length,
+        onPageChanged: (index) => setState(() => _currentIndex = index),
+        itemBuilder: (context, index) {
+          final photo = widget.photos[index];
+          return Center(
+            child: InteractiveViewer(
+              minScale: 1,
+              maxScale: 4,
+              child: Image.network(
+                photo.url,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  Icons.broken_image_rounded,
+                  color: Colors.white,
+                  size: 48,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _Badge extends StatelessWidget {
   const _Badge({
     required this.label,
@@ -375,6 +503,149 @@ class _Badge extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: textColor,
         ),
+      ),
+    );
+  }
+}
+
+class _ReportDetailActions extends StatelessWidget {
+  const _ReportDetailActions({required this.report});
+
+  final ReportEntity report;
+
+  @override
+  Widget build(BuildContext context) {
+    if (report.type == ReportType.lost) {
+      return Column(
+        children: [
+          _DetailPrimaryAction(
+            icon: Icons.visibility_rounded,
+            label: 'La vi / tengo información',
+            onPressed: () => _showActionMessage(
+              context,
+              'Gracias por ayudar. Pronto podrás registrar un avistamiento desde aquí.',
+            ),
+          ),
+          SizedBox(height: 10),
+          _DetailSecondaryAction(
+            icon: Icons.share_rounded,
+            label: 'Compartir',
+            onPressed: () => shareReport(context, report),
+          ),
+          SizedBox(height: 10),
+          _DetailSecondaryAction(
+            icon: Icons.navigation_rounded,
+            label: 'Ir a zona aproximada',
+            onPressed: () => openReportNavigation(context, report),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        _DetailPrimaryAction(
+          icon: Icons.pets_rounded,
+          label: 'Creo que es mi mascota',
+          onPressed: () => _showActionMessage(
+            context,
+            report.showContact
+                ? 'Pronto podrás contactar directamente a quien publicó este aviso.'
+                : 'Quien publicó este aviso no habilitó datos de contacto visibles.',
+          ),
+        ),
+        SizedBox(height: 10),
+        _DetailSecondaryAction(
+          icon: Icons.chat_bubble_outline_rounded,
+          label: 'Contactar',
+          onPressed: () => _showActionMessage(
+            context,
+            report.showContact
+                ? 'El contacto directo estará disponible en el siguiente paso del flujo.'
+                : 'El contacto directo no está disponible para este aviso.',
+          ),
+        ),
+        SizedBox(height: 10),
+        _DetailSecondaryAction(
+          icon: Icons.share_rounded,
+          label: 'Compartir',
+          onPressed: () => shareReport(context, report),
+        ),
+      ],
+    );
+  }
+
+  void _showActionMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: context.appColors.primaryDark,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}
+
+class _DetailPrimaryAction extends StatelessWidget {
+  const _DetailPrimaryAction({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        icon: Icon(icon),
+        label: Text(label, style: TextStyle(fontWeight: FontWeight.w700)),
+      ),
+    );
+  }
+}
+
+class _DetailSecondaryAction extends StatelessWidget {
+  const _DetailSecondaryAction({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: context.appColors.textPrimary,
+          side: BorderSide(color: context.appColors.border),
+          padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          backgroundColor: context.appColors.surface,
+        ),
+        icon: Icon(icon),
+        label: Text(label, style: TextStyle(fontWeight: FontWeight.w700)),
       ),
     );
   }

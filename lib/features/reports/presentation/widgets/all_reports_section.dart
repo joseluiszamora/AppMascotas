@@ -254,7 +254,7 @@ class _AllReportsSectionState extends State<AllReportsSection> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Todos los reportes',
+                      'Lista de reportes',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -263,7 +263,7 @@ class _AllReportsSectionState extends State<AllReportsSection> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Consulta reportes tuyos y de la comunidad en un solo lugar.',
+                      'Mascotas perdidas y encontradas cerca de ti.',
                       style: TextStyle(
                         fontSize: 13,
                         color: context.appColors.textSecondary,
@@ -368,6 +368,7 @@ class _AllReportsSectionState extends State<AllReportsSection> {
                   final isMine = report.reporterId == _currentUserId;
                   return ReportListCard(
                     report: report,
+                    isMine: isMine,
                     secondaryInfo: _sortOrder == ReportListSortOrder.proximity
                         ? _distanceLabel(report)
                         : null,

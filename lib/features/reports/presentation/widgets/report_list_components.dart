@@ -352,12 +352,14 @@ class ReportListCard extends StatelessWidget {
   const ReportListCard({
     super.key,
     required this.report,
+    this.isMine = false,
     this.extraBadges = const [],
     this.secondaryInfo,
     this.secondaryInfoIcon = Icons.near_me_rounded,
   });
 
   final ReportEntity report;
+  final bool isMine;
   final List<ReportListBadgeData> extraBadges;
   final String? secondaryInfo;
   final IconData secondaryInfoIcon;
@@ -365,14 +367,10 @@ class ReportListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateLabel = reportRelativeTimeLabel(report.occurredAt);
-    final typeColor = report.type == ReportType.lost
-        ? context.appColors.lostPet
-        : context.appColors.foundPet;
-    final typeBg = report.type == ReportType.lost
-        ? context.appColors.pastelPink
-        : context.appColors.pastelGreen;
+    final freshness = reportFreshnessData(context, report);
+    final detailLine = reportListDetailLine(report);
+    final needsConfirmation = reportNeedsOwnerConfirmation(report);
     final statusColors = reportListStatusColors(context, report.status);
-
     return InkWell(
       onTap: () => context.push(AppRoutes.reportDetail(report.id)),
       borderRadius: BorderRadius.circular(24),
@@ -418,11 +416,9 @@ class ReportListCard extends StatelessWidget {
                     runSpacing: 8,
                     children: [
                       ReportListBadge(
-                        label: report.type == ReportType.lost
-                            ? 'Perdida'
-                            : 'Encontrada',
-                        color: typeColor,
-                        background: typeBg,
+                        label: freshness.label,
+                        color: freshness.foreground,
+                        background: freshness.background,
                       ),
                       ReportListBadge(
                         label: reportStatusLabel(report.status),
@@ -449,17 +445,17 @@ class ReportListCard extends StatelessWidget {
                       color: context.appColors.textPrimary,
                     ),
                   ),
-                  if (report.petBreed?.trim().isNotEmpty == true)
-                    Padding(
-                      padding: EdgeInsets.only(top: 4),
-                      child: Text(
-                        report.petBreed!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.appColors.textSecondary,
-                        ),
-                      ),
+                  SizedBox(height: 4),
+                  Text(
+                    detailLine,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.appColors.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
+                  ),
                   SizedBox(height: 8),
                   Text(
                     reportLocationLabel(report),
@@ -471,41 +467,22 @@ class ReportListCard extends StatelessWidget {
                       height: 1.3,
                     ),
                   ),
-                  if (secondaryInfo != null) ...[
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          secondaryInfoIcon,
-                          size: 14,
-                          color: context.appColors.textHint,
-                        ),
-                        SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            secondaryInfo!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.appColors.textHint,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                   SizedBox(height: 8),
                   Row(
                     children: [
                       Icon(
-                        Icons.schedule_rounded,
+                        secondaryInfo != null
+                            ? secondaryInfoIcon
+                            : Icons.schedule_rounded,
                         size: 14,
                         color: context.appColors.textHint,
                       ),
                       SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          dateLabel,
+                          secondaryInfo == null
+                              ? dateLabel
+                              : '$secondaryInfo · $dateLabel',
                           style: TextStyle(
                             fontSize: 12,
                             color: context.appColors.textHint,
@@ -519,11 +496,129 @@ class ReportListCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _ReportCardActionButton(
+                        label: 'La vi',
+                        icon: Icons.visibility_rounded,
+                        onTap: () =>
+                            context.push(AppRoutes.reportDetail(report.id)),
+                      ),
+                      _ReportCardActionButton(
+                        label: 'Compartir',
+                        icon: Icons.ios_share_rounded,
+                        onTap: () => shareReport(context, report),
+                      ),
+                    ],
+                  ),
+                  if (isMine && needsConfirmation) ...[
+                    SizedBox(height: 10),
+                    _OwnerConfirmationPrompt(report: report),
+                  ],
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ReportCardActionButton extends StatelessWidget {
+  const _ReportCardActionButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Ink(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: context.appColors.background,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: context.appColors.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: context.appColors.primary),
+              SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: context.appColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OwnerConfirmationPrompt extends StatelessWidget {
+  const _OwnerConfirmationPrompt({required this.report});
+
+  final ReportEntity report;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.appColors.pastelYellow,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '¿${reportTitle(report)} sigue perdida?',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: context.appColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _ReportCardActionButton(
+              label: 'Sí, mantener activo',
+              icon: Icons.check_circle_rounded,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Gracias. Pronto guardaremos esta confirmación en tu aviso.',
+                    ),
+                    backgroundColor: context.appColors.primaryDark,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -672,6 +767,36 @@ String reportListPetTypeLabel(ReportPetType type) => switch (type) {
   ReportPetType.dog => 'Perro',
 };
 
+String reportListPetSizeLabel(ReportPetSize size) => switch (size) {
+  ReportPetSize.small => 'Pequeño',
+  ReportPetSize.medium => 'Mediano',
+  ReportPetSize.large => 'Grande',
+  ReportPetSize.extraLarge => 'Muy grande',
+};
+
+String reportListDetailLine(ReportEntity report) {
+  final parts = <String>[
+    report.type == ReportType.lost ? 'Perdida' : 'Encontrada',
+  ];
+
+  final petType = report.effectivePetType;
+  if (petType != null) {
+    parts.add(reportListPetTypeLabel(petType));
+  }
+
+  final color = report.effectivePetColor?.trim();
+  if (color != null && color.isNotEmpty) {
+    parts.add(color);
+  }
+
+  final size = report.effectivePetSize;
+  if (size != null) {
+    parts.add(reportListPetSizeLabel(size));
+  }
+
+  return parts.join(' · ');
+}
+
 String reportListSortLabel(ReportListSortOrder sortOrder) =>
     switch (sortOrder) {
       ReportListSortOrder.newest => 'Fecha reciente',
@@ -710,6 +835,76 @@ class StatusPalette {
 
   final Color foreground;
   final Color background;
+}
+
+class ReportFreshnessData {
+  ReportFreshnessData({
+    required this.label,
+    required this.foreground,
+    required this.background,
+  });
+
+  final String label;
+  final Color foreground;
+  final Color background;
+}
+
+ReportFreshnessData reportFreshnessData(
+  BuildContext context,
+  ReportEntity report, {
+  DateTime? now,
+}) {
+  final currentTime = now ?? DateTime.now();
+  final createdAge = currentTime.difference(report.createdAt);
+  final updatedAge = currentTime.difference(report.updatedAt);
+
+  if (createdAge.inHours < 24) {
+    return ReportFreshnessData(
+      label: 'Nuevo',
+      foreground: AppColors.primary,
+      background: context.appColors.pastelBlue,
+    );
+  }
+
+  if (_isSameDay(report.updatedAt, currentTime)) {
+    return ReportFreshnessData(
+      label: 'Actualizado hoy',
+      foreground: context.appColors.foundPet,
+      background: context.appColors.pastelGreen,
+    );
+  }
+
+  if (updatedAge.inDays < 2) {
+    return ReportFreshnessData(
+      label: reportRelativeTimeLabel(report.updatedAt, now: currentTime),
+      foreground: context.appColors.warning,
+      background: context.appColors.pastelYellow,
+    );
+  }
+
+  return ReportFreshnessData(
+    label:
+        'Sin actualizar ${reportRelativeTimeLabel(report.updatedAt, now: currentTime).toLowerCase()}',
+    foreground: context.appColors.textSecondary,
+    background: context.appColors.border,
+  );
+}
+
+bool reportNeedsOwnerConfirmation(ReportEntity report, {DateTime? now}) {
+  if (report.type != ReportType.lost) return false;
+  if (report.status != ReportStatus.active &&
+      report.status != ReportStatus.underReview) {
+    return false;
+  }
+
+  final currentTime = now ?? DateTime.now();
+  return currentTime.difference(report.updatedAt).inDays >= 14;
+}
+
+bool _isSameDay(DateTime first, DateTime second) {
+  return first.year == second.year &&
+      first.month == second.month &&
+      first.day == second.day;
 }
 
 String reportRelativeTimeLabel(DateTime dateTime, {DateTime? now}) {
